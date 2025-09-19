@@ -5,13 +5,13 @@ import type { Route$PatternMatchedEvent } from "sap/ui/core/routing/Route";
 /**
  * @namespace base.controller
  */
-export default class Main extends Base {
+export default class Detail extends Base {
   private router: Router;
 
   public override onInit(): void {
     this.router = this.getRouter();
 
-    this.router.getRoute("RouteMain")?.attachMatched(this.onRouteMatched);
+    this.router.getRoute("detail")?.attachMatched(this.onRouteMatched);
   }
 
   private onRouteMatched = (event: Route$PatternMatchedEvent) => {
@@ -21,20 +21,6 @@ export default class Main extends Base {
   };
 
   public override onExit(): void | undefined {
-    this.router.getRoute("RouteMain")?.detachMatched(this.onRouteMatched);
-  }
-
-  public onNavigateToDetail() {
-    this.router.navTo("detail", {
-      productId: "HT-1000",
-    });
-  }
-
-  public onDisplayTarget() {
-    this.displayTarget({
-      target: "processSuccess",
-      title: "Operation Successful",
-      description: "The operation was completed successfully.",
-    });
+    this.router.getRoute("detail")?.detachMatched(this.onRouteMatched);
   }
 }

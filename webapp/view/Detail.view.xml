@@ -1,0 +1,12 @@
+<mvc:View
+    controllerName="base.controller.Detail"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+>
+    <Page
+        id="detailPage"
+        title="{i18n>title}"
+    >
+        <Text text="Detail Page" />
+    </Page>
+</mvc:View>

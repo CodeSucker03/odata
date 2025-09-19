@@ -22,7 +22,13 @@ export default class Component extends BaseComponent {
     // call the base component's init function
     super.init();
 
-    this.setModel(new JSONModel({}), "global");
+    this.setModel(
+      new JSONModel({
+        MessageTitle: "",
+        MessageDescription: "",
+      }),
+      "global"
+    );
 
     // set the device model
     this.setModel(createDeviceModel(), "device");

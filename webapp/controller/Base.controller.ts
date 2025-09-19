@@ -115,4 +115,10 @@ export default class Base extends Controller {
   protected isControl<T extends Control>(control: unknown, name: string): control is T {
     return this.getControlName(<Control>control) === name;
   }
+
+  protected displayTarget(options: { target: string; title?: string; description?: string }) {
+    const { target, title, description } = options;
+
+    void this.getRouter().getTargets()?.display(target);
+  }
 }

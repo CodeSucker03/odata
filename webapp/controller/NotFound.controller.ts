@@ -9,4 +9,9 @@ export default class NotFound extends BaseController {
   public onPressed() {
     this.getRouter().navTo("RouteMain");
   }
+
+  public override onExit(): void | undefined {
+    this.getGlobalModel().setProperty("/MessageTitle", "");
+    this.getGlobalModel().setProperty("/MessageDescription", "");
+  }
 }

@@ -7,6 +7,9 @@
         id="page"
         title="{i18n>title}"
     >
-        <Text text="Hello World!" />
+        <Button
+            press="onDisplayTarget"
+            text="Go to Detail Page"
+        />
     </Page>
 </mvc:View>
