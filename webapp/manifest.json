@@ -99,11 +99,6 @@
           "name": "RouteMain",
           "pattern": ":?query:",
           "target": ["TargetMain"]
-        },
-        {
-          "name": "detail",
-          "pattern": "detail/{productId}",
-          "target": ["detail"]
         }
       ],
       "targets": {
@@ -114,16 +109,6 @@
         "notFound": {
           "viewId": "notFound",
           "viewName": "NotFound",
-          "title": "{i18n>appTitle}"
-        },
-        "detail": {
-          "viewId": "detail",
-          "viewName": "Detail",
-          "title": "{i18n>appTitle}"
-        },
-        "processSuccess": {
-          "viewId": "processSuccess",
-          "viewName": "messages.ProcessSuccess",
           "title": "{i18n>appTitle}"
         }
       }
