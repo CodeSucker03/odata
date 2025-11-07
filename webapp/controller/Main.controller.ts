@@ -1,4 +1,6 @@
 import type { FilterPayload } from "base/types/filter";
+import type { ODataError, ODataResponse } from "base/types/odata";
+import type { LeaveRequestItem } from "base/types/pages/main";
 import type { Dict } from "base/types/utils";
 import { noop } from "base/utils/shared";
 import type DynamicPage from "sap/f/DynamicPage";
@@ -19,6 +21,8 @@ import PersonalizableInfo from "sap/ui/comp/smartvariants/PersonalizableInfo";
 import type SmartVariantManagement from "sap/ui/comp/smartvariants/SmartVariantManagement";
 import type View from "sap/ui/core/mvc/View";
 import type Router from "sap/ui/core/routing/Router";
+import JSONModel from "sap/ui/model/json/JSONModel";
+import type ODataModel from "sap/ui/model/odata/v2/ODataModel";
 import type Table from "sap/ui/table/Table";
 import Base from "./Base.controller";
 
@@ -45,6 +49,14 @@ export default class Main extends Base {
     this.table = this.getControlById<Table>("table");
     this.layout = this.getControlById<DynamicPage>("dynamicPage");
 
+    this.setModel(
+      new JSONModel({
+        rows: [],
+        selectedIndices: [],
+      }),
+      "table"
+    );
+
     // Filters
     this.svm = this.getControlById<SmartVariantManagement>("svm");
     this.expandedLabel = this.getControlById<Label>("expandedLabel");
@@ -66,6 +78,12 @@ export default class Main extends Base {
     );
     this.svm.initialise(noop, this.filterBar);
   }
+
+  // #region Lifecycle hook
+  public override onAfterRendering(): void | undefined {
+    this.filterBar.fireSearch();
+  }
+  // #endregion Lifecycle hook
 
   // #region Filters
   /**
@@ -305,4 +323,26 @@ export default class Main extends Base {
     return filters;
   }
   // #endregion Filters
+
+  public onSearch() {
+    const oDataModel = this.getModel<ODataModel>();
+    const tableModel = this.getModel<JSONModel>("table");
+
+    this.table.setBusy(true);
+    oDataModel.read("/LeaveRequestSet", {
+      filters: [],
+      urlParameters: {},
+      success: (response: ODataResponse<LeaveRequestItem[]>) => {
+        this.table.setBusy(false);
+
+        console.log("OData read success:", response.results);
+
+        tableModel.setProperty("/rows", response.results);
+      },
+      error: (error: ODataError) => {
+        this.table.setBusy(false);
+        console.error("OData read error:", error);
+      },
+    });
+  }
 }

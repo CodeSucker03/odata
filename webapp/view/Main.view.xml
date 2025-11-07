@@ -6,6 +6,7 @@
     xmlns:f="sap.f"
     xmlns:fb="sap.ui.comp.filterbar"
     xmlns:svm="sap.ui.comp.smartvariants"
+    xmlns:table="sap.ui.table"
 >
     <f:DynamicPage
         id="dynamicPage"
@@ -123,15 +124,72 @@
             </f:DynamicPageHeader>
         </f:header>
         <f:content>
-            <Button
-                text="Get filter"
-                press="getFilters"
-            />
+            <table:Table
+                id="table"
+                rowActionCount="1"
+                rows="{table>/rows}"
+            >
+                <table:extension>
+                    <OverflowToolbar class="sapMTBHeader-CTX">
+                        <Title text="Leave Request" />
+                        <ToolbarSpacer />
+                        <Button
+                            text="Add"
+                            tooltip="Add"
+                            type="Emphasized"
+                            icon="sap-icon://add"
+                        />
+                        <Button
+                            text="Edit"
+                            tooltip="Edit"
+                            type="Emphasized"
+                            icon="sap-icon://edit"
+                            enabled="false"
+                        />
+                        <Button
+                            text="Delete"
+                            tooltip="Delete"
+                            type="Reject"
+                            icon="sap-icon://delete"
+                            enabled="false"
+                        />
+                        <ToolbarSeparator />
+                        <Button
+                            icon="sap-icon://excel-attachment"
+                            tooltip="Export to Excel"
+                        />
+                    </OverflowToolbar>
+                </table:extension>
+                <table:noData>
+                    <IllustratedMessage
+                        illustrationType="sapIllus-NoSearchResults"
+                        enableVerticalResponsiveness="true"
+                    />
+                </table:noData>
+                <table:columns>
+                    <table:Column
+                        id="RequestId"
+                        sortProperty="RequestId"
+                        filterProperty="RequestId"
+                    >
+                        <table:label>
+                            <Label text="Mã đơn nghỉ" />
+                        </table:label>
+                        <table:template>
+                            <ObjectIdentifier
+                                title="{table>RequestId}"
+                                titleActive="true"
+                            />
+                        </table:template>
+                    </table:Column>
+                </table:columns>
+                <table:rowActionTemplate>
+                    <table:RowAction>
+                        <table:RowActionItem type="Navigation" />
+                    </table:RowAction>
+                </table:rowActionTemplate>
+            </table:Table>
         </f:content>
-        <f:footer>
-            <OverflowToolbar>
-                <Button text="Click me" />
-            </OverflowToolbar>
-        </f:footer>
+        <f:footer />
     </f:DynamicPage>
 </mvc:View>

@@ -17,7 +17,7 @@
     },
     "dataSources": {
       "mainService": {
-        "uri": "/V2/Northwind/Northwind.svc/",
+        "uri": "/sap/opu/odata/sap/ZLEAVE_REQUEST_SRV/",
         "type": "OData",
         "settings": {
           "annotations": [],
