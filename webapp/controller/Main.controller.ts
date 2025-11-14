@@ -1,15 +1,21 @@
 import type { FilterPayload } from "base/types/filter";
 import type { ODataError, ODataResponse } from "base/types/odata";
-import type { LeaveRequestItem } from "base/types/pages/main";
+import type { FieldValueHelpItem, LeaveRequestForm, LeaveRequestItem } from "base/types/pages/main";
 import type { Dict } from "base/types/utils";
-import { noop } from "base/utils/shared";
+import { noop, sleep } from "base/utils/shared";
 import type DynamicPage from "sap/f/DynamicPage";
+import type { Button$PressEvent } from "sap/m/Button";
 import type ComboBox from "sap/m/ComboBox";
 import type DatePicker from "sap/m/DatePicker";
+import type Dialog from "sap/m/Dialog";
+import type { Dialog$AfterCloseEvent } from "sap/m/Dialog";
 import type Input from "sap/m/Input";
 import type Label from "sap/m/Label";
+import MessageBox from "sap/m/MessageBox";
+import MessageToast from "sap/m/MessageToast";
 import type MultiComboBox from "sap/m/MultiComboBox";
 import type MultiInput from "sap/m/MultiInput";
+import type { RadioButtonGroup$SelectEvent } from "sap/m/RadioButtonGroup";
 import type Select from "sap/m/Select";
 import type TextArea from "sap/m/TextArea";
 import type TimePicker from "sap/m/TimePicker";
@@ -19,8 +25,11 @@ import type { FilterBar$FilterChangeEvent } from "sap/ui/comp/filterbar/FilterBa
 import type FilterGroupItem from "sap/ui/comp/filterbar/FilterGroupItem";
 import PersonalizableInfo from "sap/ui/comp/smartvariants/PersonalizableInfo";
 import type SmartVariantManagement from "sap/ui/comp/smartvariants/SmartVariantManagement";
+import { ValueState } from "sap/ui/core/library";
 import type View from "sap/ui/core/mvc/View";
+import type { Route$MatchedEvent } from "sap/ui/core/routing/Route";
 import type Router from "sap/ui/core/routing/Router";
+import type Context from "sap/ui/model/Context";
 import JSONModel from "sap/ui/model/json/JSONModel";
 import type ODataModel from "sap/ui/model/odata/v2/ODataModel";
 import type Table from "sap/ui/table/Table";
@@ -42,6 +51,7 @@ export default class Main extends Base {
   private filterBar: FilterBar;
 
   // Fragments
+  private createRequestDialog: Dialog;
 
   public override onInit(): void {
     this.view = <View>this.getView();
@@ -55,6 +65,15 @@ export default class Main extends Base {
         selectedIndices: [],
       }),
       "table"
+    );
+
+    this.setModel(
+      new JSONModel({
+        Status: [],
+        LeaveType: [],
+        TimeSlot: [],
+      }),
+      "master"
     );
 
     // Filters
@@ -77,13 +96,34 @@ export default class Main extends Base {
       })
     );
     this.svm.initialise(noop, this.filterBar);
+
+    // Router
+    this.router.getRoute("RouteMain")?.attachMatched(this.onObjectMatched);
   }
 
   // #region Lifecycle hook
-  public override onAfterRendering(): void | undefined {
-    this.filterBar.fireSearch();
+  public override onAfterRendering(): void | undefined {}
+
+  public override onExit(): void | undefined {
+    this.router.getRoute("RouteMain")?.detachMatched(this.onObjectMatched);
   }
   // #endregion Lifecycle hook
+
+  // #region Router
+  private onObjectMatched = (event: Route$MatchedEvent) => {
+    this.getMetadataLoaded()
+      .then(() => this.onGetMasterData())
+      .then(() => {
+        this.filterBar.fireSearch();
+      })
+      .catch((error) => {
+        console.log(error);
+      })
+      .finally(() => {
+        // loading off
+      });
+  };
+  // #endregion Router
 
   // #region Filters
   /**
@@ -345,4 +385,268 @@ export default class Main extends Base {
       },
     });
   }
+
+  private onRefresh() {
+    this.filterBar.fireSearch();
+  }
+
+  public onSearchLegacy() {
+    const tableModel = this.getModel<JSONModel>("table");
+
+    this.table.setBusy(true);
+
+    sleep(2000)
+      .then(() => {
+        const mockData: LeaveRequestItem[] = [
+          {
+            CreatedAt: new Date(),
+            Reason: "Vacation",
+            RequestId: "REQ-001",
+            CreatedBy: "John Doe",
+            EmployeeId: "EMP-001",
+            LeaveType: "Annual Leave",
+            StartDate: "2024-07-01",
+            EndDate: "2024-07-10",
+            Status: "Approved",
+            TimeSlot: "Full Day",
+          },
+          {
+            CreatedAt: new Date(),
+            Reason: "Medical Leave",
+            RequestId: "REQ-002",
+            CreatedBy: "Jane Smith",
+            EmployeeId: "EMP-002",
+            LeaveType: "Sick Leave",
+            StartDate: "2024-08-15",
+            EndDate: "2024-08-20",
+            Status: "Pending",
+            TimeSlot: "Half Day",
+          },
+        ];
+
+        this.table.setBusy(false);
+        tableModel.setProperty("/rows", mockData);
+
+        console.log("Data fetch successful:", mockData);
+      })
+      .catch((error) => {
+        this.table.setBusy(false);
+        console.error("Error during data fetch:", error);
+      });
+  }
+
+  // #region Table
+  public onRowSelectionChange() {
+    const selectedIndices = this.table.getSelectedIndices();
+
+    const tableModel = this.getModel<JSONModel>("table");
+
+    tableModel.setProperty("/selectedIndices", [...selectedIndices]);
+    // tableModel.setProperty("/selectedIndices", selectedIndices);
+  }
+  // #endregion Table
+
+  // #region Event handlers
+  // #region Create
+  public async onOpenCreateRequest() {
+    try {
+      if (!this.createRequestDialog) {
+        this.createRequestDialog = await this.loadView<Dialog>("CreateRequest");
+      }
+
+      this.createRequestDialog.setModel(
+        new JSONModel({
+          LeaveType: "",
+          StartDate: "",
+          EndDate: "",
+          Reason: "",
+          TimeSlot: "",
+          TimeSlotIndex: 0,
+        } satisfies LeaveRequestForm),
+        "form"
+      );
+
+      this.createRequestDialog.open();
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  public onCloseCreateRequest() {
+    this.createRequestDialog?.close();
+  }
+
+  public onAfterCloseCreateRequest(event: Dialog$AfterCloseEvent) {
+    const dialog = event.getSource();
+
+    dialog.setModel(null, "form");
+  }
+
+  public onSubmitCreateRequest(event: Button$PressEvent) {
+    const control = event.getSource();
+    const dialog = <Dialog>control.getParent();
+
+    const formModel = <JSONModel>dialog.getModel("form");
+    const formData = <LeaveRequestForm>formModel.getData();
+
+    const oDataModel = this.getModel<ODataModel>();
+
+    const { LeaveType, StartDate, EndDate, Reason, TimeSlot } = formData;
+
+    dialog.setBusy(true);
+    oDataModel.create(
+      "/LeaveRequestSet",
+      {
+        LeaveType,
+        StartDate: this.formatter.toUTCDate(StartDate),
+        EndDate: this.formatter.toUTCDate(EndDate),
+        Reason,
+        TimeSlot: "01",
+        Status: "01", // New
+      },
+      {
+        success: (response: ODataResponse<LeaveRequestItem>) => {
+          dialog.setBusy(false);
+
+          MessageToast.show("Leave request created successfully.");
+
+          this.onCloseCreateRequest();
+
+          this.onRefresh();
+        },
+        error: (error: ODataError) => {
+          dialog.setBusy(false);
+        },
+      }
+    );
+  }
+  // #endregion Create
+
+  // #region Edit
+  // #endregion Edit
+
+  // #region Delete
+  public onDeleteRequest() {
+    const oDataModel = this.getModel<ODataModel>();
+
+    const indices = this.table.getSelectedIndices();
+
+    if (!indices.length) {
+      MessageToast.show("Please select at least one request to delete.");
+      return;
+    }
+
+    const item = <LeaveRequestItem>this.table.getContextByIndex(indices[0])?.getObject();
+
+    MessageBox.confirm("Do you want to delete this request?", {
+      actions: [MessageBox.Action.DELETE, MessageBox.Action.CANCEL],
+      emphasizedAction: MessageBox.Action.DELETE,
+      onClose: (action: unknown) => {
+        if (action === MessageBox.Action.DELETE) {
+          const key = oDataModel.createKey("/LeaveRequestSet", item);
+
+          oDataModel.remove(key, {
+            success: () => {
+              MessageToast.show("Leave request deleted successfully.");
+
+              this.onRefresh();
+            },
+            error: (error: ODataError) => {
+              console.log(error);
+              MessageBox.error("Failed to delete the leave request.");
+            },
+          });
+        }
+      },
+    });
+  }
+  // #endregion Delete
+  // #endregion Event handlers
+
+  // #region Validation
+  public onRadioSelectionChange(event: RadioButtonGroup$SelectEvent) {
+    const control = event.getSource();
+
+    const context = <Context>control.getBindingContext("form");
+    const formModel = <JSONModel>context.getModel();
+    const path = context.getPath();
+
+    const selectedIndex = control.getSelectedIndex();
+
+    const options = <FieldValueHelpItem[]>this.getModel("master").getProperty("/TimeSlot");
+
+    const { FieldKey } = options[selectedIndex];
+
+    formModel.setProperty(`${path}/TimeSlot`, FieldKey);
+  }
+  // #endregion Validation
+
+  // #region Formatters
+  public formatStatusText(statusKey: string): string {
+    const map: Record<string, string> = {
+      "01": "New",
+      "02": "Approved",
+      "03": "Rejected",
+    };
+    return map[statusKey] ?? statusKey;
+  }
+
+  public formatStatusState(statusKey: string): ValueState {
+    const map: Record<string, ValueState> = {
+      "01": ValueState.Information,
+      "02": ValueState.Success,
+      "03": ValueState.Error,
+    };
+    return map[statusKey] ?? ValueState.None;
+  }
+  // #endregion Formatters
+
+  // #region Master data
+  private async onGetMasterData() {
+    return new Promise((resolve, reject) => {
+      const oDataModel = this.getModel<ODataModel>();
+      const masterModel = this.getModel("master");
+
+      oDataModel.read("/FieldValueHelpSet", {
+        success: (response: ODataResponse<FieldValueHelpItem[]>) => {
+          console.log("Raw FieldValueHelpSet data:", response.results);
+
+          const status: FieldValueHelpItem[] = [];
+          const leaveType: FieldValueHelpItem[] = [];
+          const timeSlot: FieldValueHelpItem[] = [];
+
+          response.results.forEach((item) => {
+            switch (item.FieldName) {
+              case "Status": {
+                status.push(item);
+                break;
+              }
+              case "LeaveType": {
+                leaveType.push(item);
+                break;
+              }
+              case "TimeSlot": {
+                timeSlot.push(item);
+                break;
+              }
+              default:
+                break;
+            }
+          });
+
+          masterModel.setProperty("/Status", status);
+          masterModel.setProperty("/LeaveType", leaveType);
+          masterModel.setProperty("/TimeSlot", timeSlot);
+
+          console.log("Master data loaded:", masterModel.getData());
+
+          resolve(true);
+        },
+        error: (error: ODataError) => {
+          reject(error);
+        },
+      });
+    });
+  }
+  // #endregion Master data
 }

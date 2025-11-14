@@ -62,7 +62,10 @@
         "type": "sap.ui.model.resource.ResourceModel",
         "settings": {
           "bundleName": "base.i18n.i18n",
-          "supportedLocales": ["en", ""],
+          "supportedLocales": [
+            "en",
+            ""
+          ],
           "fallbackLocale": ""
         }
       },
@@ -98,7 +101,9 @@
         {
           "name": "RouteMain",
           "pattern": ":?query:",
-          "target": ["TargetMain"]
+          "target": [
+            "TargetMain"
+          ]
         }
       ],
       "targets": {

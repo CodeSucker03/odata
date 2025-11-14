@@ -127,6 +127,7 @@
             <table:Table
                 id="table"
                 rowActionCount="1"
+                rowSelectionChange="onRowSelectionChange"
                 rows="{table>/rows}"
             >
                 <table:extension>
@@ -138,20 +139,22 @@
                             tooltip="Add"
                             type="Emphasized"
                             icon="sap-icon://add"
+                            press="onOpenCreateRequest"
                         />
                         <Button
                             text="Edit"
                             tooltip="Edit"
                             type="Emphasized"
                             icon="sap-icon://edit"
-                            enabled="false"
+                            enabled="{= ${table>/selectedIndices}.length === 1 }"
                         />
                         <Button
                             text="Delete"
                             tooltip="Delete"
                             type="Reject"
                             icon="sap-icon://delete"
-                            enabled="false"
+                            enabled="{= ${table>/selectedIndices}.length === 1 }"
+                            press="onDeleteRequest"
                         />
                         <ToolbarSeparator />
                         <Button
@@ -177,8 +180,82 @@
                         </table:label>
                         <table:template>
                             <ObjectIdentifier
-                                title="{table>RequestId}"
+                                title="{
+                                    path: 'table>RequestId'
+                                }"
                                 titleActive="true"
+                            />
+                        </table:template>
+                    </table:Column>
+
+                    <table:Column>
+                        <table:label>
+                            <Label text="Loại phép" />
+                        </table:label>
+                        <table:template>
+                            <Text text="{table>LeaveType}" />
+                        </table:template>
+                    </table:Column>
+
+                    <table:Column>
+                        <table:label>
+                            <Label text="Ngày bắt đầu nghỉ" />
+                        </table:label>
+                        <table:template>
+                            <Text
+                                text="{
+                                    path: 'table>StartDate',
+                                    formatter: '.formatter.formatDate'
+                                }"
+                            />
+                        </table:template>
+                    </table:Column>
+
+                    <table:Column>
+                        <table:label>
+                            <Label text="Ngày kết thúc nghỉ" />
+                        </table:label>
+                        <table:template>
+                            <Text
+                                text="{
+                                    path: 'table>EndDate',
+                                    formatter: '.formatter.formatDate'
+                                }"
+                            />
+                        </table:template>
+                    </table:Column>
+
+                    <table:Column>
+                        <table:label>
+                            <Label text="TimeSlot" />
+                        </table:label>
+                        <table:template>
+                            <Text text="{table>TimeSlot}" />
+                        </table:template>
+                    </table:Column>
+
+                    <table:Column>
+                        <table:label>
+                            <Label text="Lý do xin nghỉ" />
+                        </table:label>
+                        <table:template>
+                            <Text text="{table>Reason}" />
+                        </table:template>
+                    </table:Column>
+
+                    <table:Column>
+                        <table:label>
+                            <Label text="Trạng thái" />
+                        </table:label>
+                        <table:template>
+                            <ObjectStatus
+                                text="{
+                                    path: 'table>Status', formatter: '.formatStatusText'
+                                }"
+                                state="{
+                                    path: 'table>Status', formatter: '.formatStatusState'
+                                }"
+                                inverted="true"
                             />
                         </table:template>
                     </table:Column>
