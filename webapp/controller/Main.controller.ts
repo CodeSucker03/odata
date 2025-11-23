@@ -1,7 +1,6 @@
 import type { FilterPayload } from "base/types/filter";
 import type { ODataError, ODataResponse } from "base/types/odata";
 import type { FieldValueHelpItem, LeaveRequestForm, LeaveRequestItem } from "base/types/pages/main";
-import type { Dict } from "base/types/utils";
 import { noop, sleep } from "base/utils/shared";
 import type DynamicPage from "sap/f/DynamicPage";
 import type { Button$PressEvent } from "sap/m/Button";
@@ -30,6 +29,7 @@ import type View from "sap/ui/core/mvc/View";
 import type { Route$MatchedEvent } from "sap/ui/core/routing/Route";
 import type Router from "sap/ui/core/routing/Router";
 import type Context from "sap/ui/model/Context";
+import Filter from "sap/ui/model/Filter";
 import JSONModel from "sap/ui/model/json/JSONModel";
 import type ODataModel from "sap/ui/model/odata/v2/ODataModel";
 import type Table from "sap/ui/table/Table";
@@ -316,7 +316,7 @@ export default class Main extends Base {
   }
 
   public getFilters() {
-    const filters = this.filterBar.getFilterGroupItems().reduce<Dict>((acc, item) => {
+    const filters = this.filterBar.getFilterGroupItems().reduce<Filter[]>((acc, item) => {
       const control = item.getControl();
       const name = item.getName();
 
@@ -326,7 +326,7 @@ export default class Main extends Base {
           const value = control.getValue();
 
           if (value) {
-            acc[name] = value;
+            acc.push(new Filter(name, "Contains", value));
           }
 
           break;
@@ -336,7 +336,7 @@ export default class Main extends Base {
           const value = control.getValue();
 
           if (value) {
-            acc[name] = value;
+            acc.push(new Filter(name, "EQ", value));
           }
 
           break;
@@ -346,7 +346,7 @@ export default class Main extends Base {
           const value = control.getSelectedKey();
 
           if (value) {
-            acc[name] = value;
+            acc.push(new Filter(name, "EQ", value));
           }
 
           break;
@@ -356,9 +356,7 @@ export default class Main extends Base {
       }
 
       return acc;
-    }, {});
-
-    console.log("Filters:", filters);
+    }, []);
 
     return filters;
   }
@@ -368,9 +366,11 @@ export default class Main extends Base {
     const oDataModel = this.getModel<ODataModel>();
     const tableModel = this.getModel<JSONModel>("table");
 
+    const filters = this.getFilters();
+
     this.table.setBusy(true);
     oDataModel.read("/LeaveRequestSet", {
-      filters: [],
+      filters,
       urlParameters: {},
       success: (response: ODataResponse<LeaveRequestItem[]>) => {
         this.table.setBusy(false);
