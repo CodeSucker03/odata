@@ -35,6 +35,9 @@ import JSONModel from "sap/ui/model/json/JSONModel";
 import type ODataModel from "sap/ui/model/odata/v2/ODataModel";
 import type Table from "sap/ui/table/Table";
 import Base from "./Base.controller";
+import Spreadsheet from "sap/ui/export/Spreadsheet";
+import { EdmType } from "sap/ui/export/library";
+import type { Column } from "base/utils/DataTypes";
 
 /**
  * @namespace base.controller
@@ -746,5 +749,47 @@ export default class Main extends Base {
     return (iIndex + 1).toString().padStart(2, "0");
   }
   // #endregion Convert
+
+   // #region Excel export
+  public onExportExcel(): void {
+    const Cols: Column[] = [
+      { label: "Mã đơn nghỉ", property: "RequestId", type: EdmType.String },
+      { label: "Loại phép", property: "LeaveType", type: EdmType.String },
+      {
+        label: "Ngày bắt đầu",
+        property: "StartDate",
+        type: EdmType.Date,
+        format: "dd.MM.yyyy",
+      },
+      {
+        label: "Ngày kết thúc",
+        property: "EndDate",
+        type: EdmType.Date,
+        format: "dd.MM.yyyy",
+      },
+      { label: "TimeSlot", property: "TimeSlot", type: EdmType.String },
+      { label: "Lý do xin nghỉ", property: "Reason", type: EdmType.String },
+      { label: "Trạng thái", property: "Status", type: EdmType.String },
+    ];
+
+    const settings = {
+      workbook: { columns: Cols },
+      dataSource: this.getModel<JSONModel>("table").getProperty("/rows"),
+      fileName: "LeaveRequests.xlsx",
+      Worker: false,
+    };
+
+    const spreadsheet = new Spreadsheet(settings);
+    spreadsheet
+      .build()
+      .then(() => {
+        console.log("Spreadsheet export successful");
+      })
+      .catch((err) => {
+        console.error("Spreadsheet export error:", err);
+      });
+  }
+  // #endregion Excel
+
 
 }
