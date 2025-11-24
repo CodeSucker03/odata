@@ -1,3 +1,4 @@
+
 import type { FilterPayload } from "base/types/filter";
 import type { ODataError, ODataResponse } from "base/types/odata";
 import type { FieldValueHelpItem, LeaveRequestForm, LeaveRequestItem } from "base/types/pages/main";
@@ -52,6 +53,7 @@ export default class Main extends Base {
 
   // Fragments
   private createRequestDialog: Dialog;
+  private editRequestDialog : Dialog;
 
   public override onInit(): void {
     this.view = <View>this.getView();
@@ -523,6 +525,88 @@ export default class Main extends Base {
   // #endregion Create
 
   // #region Edit
+
+    public async onOpenEditRequest() {
+   
+    try {
+      if (!this.editRequestDialog) {
+        this.editRequestDialog = await this.loadView<Dialog>("EditRequest");
+      }
+        const indices = this.table?.getSelectedIndices();
+
+        const SelectedItem = <LeaveRequestForm>this.table.getContextByIndex(indices[0])?.getObject();
+
+        const form = {
+          ...SelectedItem,
+          StartDate: this.formatter.formatDate(SelectedItem.StartDate),
+          EndDate: this.formatter.formatDate(SelectedItem.EndDate),
+          TimeSlotIndex: this.timeSlotToIndex(SelectedItem.TimeSlot)
+        };
+
+        this.editRequestDialog.setModel(new JSONModel(form),"form");
+
+        this.editRequestDialog.open();
+
+    } catch (error) {
+
+      console.log(error);
+    }
+  }
+
+  public onCloseEditRequest(){
+    this.editRequestDialog?.close();
+  }
+
+  public onSubmitEditRequest(event : Button$PressEvent) {
+    const control = event.getSource();
+    const dialog = <Dialog>control.getParent();
+
+    const formModel = <JSONModel>dialog.getModel("form");
+    const formData = <LeaveRequestForm>formModel.getData();
+
+    const oDataModel = this.getModel<ODataModel>();
+
+    const indices = this.table?.getSelectedIndices();
+    const item = <LeaveRequestItem>this.table?.getContextByIndex(indices[0])?.getObject();
+
+    const key = oDataModel.createKey("/LeaveRequestSet", item);
+    
+    const { LeaveType, StartDate, EndDate, Reason, TimeSlot } = formData;
+    
+    dialog.setBusy(true);
+    oDataModel.update(
+      key,
+      {
+        LeaveType,
+        StartDate: this.formatter.toUTCDate(StartDate,"dd.MM.yyyy"),
+        EndDate: this.formatter.toUTCDate(EndDate,"dd.MM.yyyy"),
+        Reason,
+        TimeSlot
+      },
+      {
+        success: (response: ODataResponse<LeaveRequestItem>) => {
+          dialog.setBusy(false);
+          console.log(response);
+
+          MessageToast.show("Leave request updated successfully.");
+
+          this.onCloseEditRequest();
+
+          this.onRefresh();
+        },
+        error: (error: ODataError) => {
+          console.log(error);
+
+          dialog.setBusy(false);
+        },
+      }
+    );
+ }
+
+  public onAfterCloseEditRequest(event: Dialog$AfterCloseEvent) {
+    const dialog = event.getSource();
+    dialog.setModel(null, "form");
+  } 
   // #endregion Edit
 
   // #region Delete
@@ -649,4 +733,18 @@ export default class Main extends Base {
     });
   }
   // #endregion Master data
+
+  // #region Convert string to int for timeslot
+  public timeSlotToIndex(sValue: string): number {
+    if (!sValue) {
+      return 0;
+    }
+    return parseInt(sValue, 10) - 1;
+  }
+
+  public indexToTimeSlot(iIndex: number): string {
+    return (iIndex + 1).toString().padStart(2, "0");
+  }
+  // #endregion Convert
+
 }

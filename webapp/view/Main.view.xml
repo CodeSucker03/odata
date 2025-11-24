@@ -124,139 +124,153 @@
             </f:DynamicPageHeader>
         </f:header>
         <f:content>
-            <table:Table
-                id="table"
-                rowActionCount="1"
-                rowSelectionChange="onRowSelectionChange"
-                rows="{table>/rows}"
-            >
+           <table:Table id="table" rowActionCount="1" rows="{table>/rows}" 
+            rowSelectionChange=".onRowSelectionChange" selectionMode="MultiToggle">
                 <table:extension>
                     <OverflowToolbar class="sapMTBHeader-CTX">
                         <Title text="Leave Request" />
+
                         <ToolbarSpacer />
-                        <Button
-                            text="Add"
-                            tooltip="Add"
-                            type="Emphasized"
-                            icon="sap-icon://add"
-                            press="onOpenCreateRequest"
-                        />
-                        <Button
-                            text="Edit"
-                            tooltip="Edit"
-                            type="Emphasized"
-                            icon="sap-icon://edit"
-                            enabled="{= ${table>/selectedIndices}.length === 1 }"
-                        />
-                        <Button
-                            text="Delete"
-                            tooltip="Delete"
-                            type="Reject"
-                            icon="sap-icon://delete"
-                            enabled="{= ${table>/selectedIndices}.length === 1 }"
-                            press="onDeleteRequest"
-                        />
+                        <Button id="addButton" text="Add" tooltip="Add" type="Emphasized"
+                       
+                        icon="sap-icon://add" press=".onOpenCreateRequest" />
+
+                        <Button id="editButton" text="Edit" tooltip="Edit" type="Emphasized"
+                        enabled="{= ${table>/selectedIndices}.length === 1 }"
+                        icon="sap-icon://edit" press=".onOpenEditRequest" />
+
+                        <Button id="deleteButton" text="Delete" tooltip="Delete" 
+                        type="Reject" icon="sap-icon://delete"
+                        enabled="{= ${table>/selectedIndices}.length === 1 }" press=".onDeleteRequest" />
+
                         <ToolbarSeparator />
-                        <Button
-                            icon="sap-icon://excel-attachment"
-                            tooltip="Export to Excel"
-                        />
+                        <Button icon="sap-icon://excel-attachment" tooltip="Export to Excel" 
+                        press=".onExportExcel" />
                     </OverflowToolbar>
                 </table:extension>
                 <table:noData>
-                    <IllustratedMessage
-                        illustrationType="sapIllus-NoSearchResults"
-                        enableVerticalResponsiveness="true"
-                    />
+                    <IllustratedMessage illustrationType="sapIllus-NoSearchResults" 
+                    enableVerticalResponsiveness="true" />
                 </table:noData>
                 <table:columns>
-                    <table:Column
-                        id="RequestId"
-                        sortProperty="RequestId"
-                        filterProperty="RequestId"
-                    >
+                    <table:Column id="RequestId" sortProperty="RequestId" filterProperty="RequestId">
                         <table:label>
                             <Label text="Mã đơn nghỉ" />
                         </table:label>
                         <table:template>
-                            <ObjectIdentifier
-                                title="{
-                                    path: 'table>RequestId'
-                                }"
-                                titleActive="true"
-                            />
+                            <ObjectIdentifier title="{table>RequestId}" titleActive="true" />
                         </table:template>
                     </table:Column>
 
-                    <table:Column>
+                    <table:Column id="EmployeeId" sortProperty="EmployeeId" filterProperty="EmployeeId">
                         <table:label>
-                            <Label text="Loại phép" />
+                            <Label text="Mã nhân viên" />
                         </table:label>
                         <table:template>
-                            <Text text="{table>LeaveType}" />
+                            <Text text="{table>EmployeeId}" />
                         </table:template>
                     </table:Column>
 
-                    <table:Column>
+                    <table:Column id="CreatedBy" sortProperty="CreatedBy" filterProperty="CreatedBy">
                         <table:label>
-                            <Label text="Ngày bắt đầu nghỉ" />
+                            <Label text="Người tạo" />
                         </table:label>
                         <table:template>
-                            <Text
-                                text="{
-                                    path: 'table>StartDate',
-                                    formatter: '.formatter.formatDate'
-                                }"
-                            />
+                            <Text text="{table>CreatedBy}" />
                         </table:template>
                     </table:Column>
 
-                    <table:Column>
+                    <table:Column id="CreatedAt" sortProperty="CreatedAt" filterProperty="CreatedAt">
                         <table:label>
-                            <Label text="Ngày kết thúc nghỉ" />
+                            <Label text="Ngày tạo" />
                         </table:label>
                         <table:template>
-                            <Text
-                                text="{
-                                    path: 'table>EndDate',
-                                    formatter: '.formatter.formatDate'
-                                }"
-                            />
+                            <Text  text="{
+                                    path: 'table>CreatedAt',
+                                    type: 'sap.ui.model.type.DateTime',
+                                    formatOptions: {
+                                        pattern: 'dd.MM.yyyy',
+                                        UTC: true
+                                    }
+                                }" />
                         </table:template>
                     </table:Column>
 
-                    <table:Column>
+                    <table:Column id="LeaveType" sortProperty="LeaveType" filterProperty="LeaveType">
                         <table:label>
-                            <Label text="TimeSlot" />
+                            <Label text="Loại nghỉ phép" />
                         </table:label>
                         <table:template>
-                            <Text text="{table>TimeSlot}" />
+                            <Text text="
+                            {= ( ${table>LeaveType} === '01' ) ? 'Annual Leave'
+                                : ( ${table>LeaveType} === '02' ) ? 'Sick Leave'
+                                : ( ${table>LeaveType} === '03' ) ? 'Maternity Leave'
+                                : 'Unpaid Leave'
+                            }" />
                         </table:template>
                     </table:Column>
 
-                    <table:Column>
+                    <table:Column id="TimeSlot" sortProperty="TimeSlot" filterProperty="TimeSlot">
                         <table:label>
-                            <Label text="Lý do xin nghỉ" />
+                            <Label text="Khung thời gian" />
+                        </table:label>
+                        <table:template>
+                            <Text text=
+                              "{= (${table>TimeSlot} === '01' ) ? 'Full day' 
+                               : ( ${table>TimeSlot} === '02') ? 'Morning' 
+                               : 'Afternoon' 
+                               }" />
+                        </table:template>
+                    </table:Column>
+                    <table:Column id="StartDate" sortProperty="StartDate" filterProperty="StartDate">
+                        <table:label>
+                            <Label text="Ngày bắt đầu" />
+                        </table:label>
+                        <table:template>
+                            <Text text=
+                            "{path: 'table>StartDate', 
+                             type: 'sap.ui.model.type.DateTime',
+                             formatOptions: {
+                                        pattern: 'dd.MM.yyyy',
+                                        UTC: true
+                                    }
+                             }" />
+                        </table:template>
+                    </table:Column>
+
+                    <table:Column id="EndDate" sortProperty="EndDate" filterProperty="EndDate">
+                        <table:label>
+                            <Label text="Ngày kết thúc" />
+                        </table:label>
+                        <table:template>
+                            <Text text="{path: 'table>EndDate', 
+                            type: 'sap.ui.model.type.DateTime', 
+                            formatOptions: { style: 'medium', 
+                                        pattern: 'dd.MM.yyyy',
+                                        UTC: true
+                                      }
+                                    }" />
+                        </table:template>
+                    </table:Column>
+
+                    <table:Column id="Reason" sortProperty="Reason" filterProperty="Reason">
+                        <table:label>
+                            <Label text="Lý do nghỉ" />
                         </table:label>
                         <table:template>
                             <Text text="{table>Reason}" />
                         </table:template>
                     </table:Column>
 
-                    <table:Column>
+
+                    <table:Column id="Status" sortProperty="Status" filterProperty="Status">
                         <table:label>
                             <Label text="Trạng thái" />
                         </table:label>
                         <table:template>
-                            <ObjectStatus
-                                text="{
-                                    path: 'table>Status', formatter: '.formatStatusText'
-                                }"
-                                state="{
-                                    path: 'table>Status', formatter: '.formatStatusState'
-                                }"
-                                inverted="true"
-                            />
+                            <ObjectStatus text="{= ${table>Status} === '01' ? 'New' : ${table>Status} === '02' ? 'Approved' : 'Rejected' }" 
+                            inverted="true" icon="sap-icon://information" 
+                            state="{= ${table>Status} === '01' ? 'Information' : ${table>Status} === '02' ? 'Success' : 'Error' }" />
                         </table:template>
                     </table:Column>
                 </table:columns>
