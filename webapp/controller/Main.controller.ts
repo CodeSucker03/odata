@@ -1,4 +1,3 @@
-
 import type { FilterPayload } from "base/types/filter";
 import type { ODataError, ODataResponse } from "base/types/odata";
 import type { FieldValueHelpItem, LeaveRequestForm, LeaveRequestItem } from "base/types/pages/main";
@@ -38,6 +37,8 @@ import Base from "./Base.controller";
 import Spreadsheet from "sap/ui/export/Spreadsheet";
 import { EdmType } from "sap/ui/export/library";
 import type { Column } from "base/utils/DataTypes";
+import InputBase from "sap/m/InputBase";
+import type Event from "sap/ui/base/Event";
 
 /**
  * @namespace base.controller
@@ -56,7 +57,7 @@ export default class Main extends Base {
 
   // Fragments
   private createRequestDialog: Dialog;
-  private editRequestDialog : Dialog;
+  private editRequestDialog: Dialog;
 
   public override onInit(): void {
     this.view = <View>this.getView();
@@ -447,7 +448,6 @@ export default class Main extends Base {
     const tableModel = this.getModel<JSONModel>("table");
 
     tableModel.setProperty("/selectedIndices", [...selectedIndices]);
-    // tableModel.setProperty("/selectedIndices", selectedIndices);
   }
   // #endregion Table
 
@@ -479,6 +479,7 @@ export default class Main extends Base {
 
   public onCloseCreateRequest() {
     this.createRequestDialog?.close();
+    this.resetValidate(this.createRequestDialog);
   }
 
   public onAfterCloseCreateRequest(event: Dialog$AfterCloseEvent) {
@@ -497,6 +498,13 @@ export default class Main extends Base {
     const oDataModel = this.getModel<ODataModel>();
 
     const { LeaveType, StartDate, EndDate, Reason, TimeSlot } = formData;
+
+    // Validate with passed dialog
+    const isValid = this.onValidateBeforeSubmit(this.createRequestDialog);
+
+    if (!isValid) {
+      return;
+    }
 
     dialog.setBusy(true);
     oDataModel.create(
@@ -529,38 +537,36 @@ export default class Main extends Base {
 
   // #region Edit
 
-    public async onOpenEditRequest() {
-   
+  public async onOpenEditRequest() {
     try {
       if (!this.editRequestDialog) {
         this.editRequestDialog = await this.loadView<Dialog>("EditRequest");
       }
-        const indices = this.table?.getSelectedIndices();
+      const indices = this.table.getSelectedIndices();
 
-        const SelectedItem = <LeaveRequestForm>this.table.getContextByIndex(indices[0])?.getObject();
+      const SelectedItem = <LeaveRequestForm>this.table.getContextByIndex(indices[0])?.getObject();
 
-        const form = {
-          ...SelectedItem,
-          StartDate: this.formatter.formatDate(SelectedItem.StartDate),
-          EndDate: this.formatter.formatDate(SelectedItem.EndDate),
-          TimeSlotIndex: this.timeSlotToIndex(SelectedItem.TimeSlot)
-        };
+      const form = {
+        ...SelectedItem,
+        StartDate: this.formatter.formatDate(SelectedItem.StartDate),
+        EndDate: this.formatter.formatDate(SelectedItem.EndDate),
+        TimeSlotIndex: this.timeSlotToIndex(SelectedItem.TimeSlot),
+      };
 
-        this.editRequestDialog.setModel(new JSONModel(form),"form");
+      this.editRequestDialog.setModel(new JSONModel(form), "form");
 
-        this.editRequestDialog.open();
-
+      this.editRequestDialog.open();
     } catch (error) {
-
       console.log(error);
     }
   }
 
-  public onCloseEditRequest(){
+  public onCloseEditRequest() {
     this.editRequestDialog?.close();
+    this.resetValidate(this.editRequestDialog);
   }
 
-  public onSubmitEditRequest(event : Button$PressEvent) {
+  public onSubmitEditRequest(event: Button$PressEvent) {
     const control = event.getSource();
     const dialog = <Dialog>control.getParent();
 
@@ -569,22 +575,30 @@ export default class Main extends Base {
 
     const oDataModel = this.getModel<ODataModel>();
 
-    const indices = this.table?.getSelectedIndices();
+    const indices = this.table.getSelectedIndices();
     const item = <LeaveRequestItem>this.table?.getContextByIndex(indices[0])?.getObject();
-
+    
+    // Create key to edit 
     const key = oDataModel.createKey("/LeaveRequestSet", item);
-    
+
     const { LeaveType, StartDate, EndDate, Reason, TimeSlot } = formData;
-    
+
+    // Validate with passed dialog
+    const isValid = this.onValidateBeforeSubmit(this.editRequestDialog);
+
+    if (!isValid) {
+      return;
+    }
+
     dialog.setBusy(true);
     oDataModel.update(
       key,
       {
         LeaveType,
-        StartDate: this.formatter.toUTCDate(StartDate,"dd.MM.yyyy"),
-        EndDate: this.formatter.toUTCDate(EndDate,"dd.MM.yyyy"),
+        StartDate: this.formatter.toUTCDate(StartDate, "dd.MM.yyyy"),
+        EndDate: this.formatter.toUTCDate(EndDate, "dd.MM.yyyy"),
         Reason,
-        TimeSlot
+        TimeSlot,
       },
       {
         success: (response: ODataResponse<LeaveRequestItem>) => {
@@ -604,12 +618,12 @@ export default class Main extends Base {
         },
       }
     );
- }
+  }
 
   public onAfterCloseEditRequest(event: Dialog$AfterCloseEvent) {
     const dialog = event.getSource();
     dialog.setModel(null, "form");
-  } 
+  }
   // #endregion Edit
 
   // #region Delete
@@ -651,6 +665,178 @@ export default class Main extends Base {
   // #endregion Event handlers
 
   // #region Validation
+
+  public onChangeValue(event: Event) {
+    try {
+      const control = event.getSource<InputBase>();
+
+      if (control.getVisible()) {
+        this.validateControl(control);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  private resetValidate(container : Dialog) {
+     const controls = this.getFormControlsByFieldGroup<InputBase>({
+      groupId: "FormField",
+      container: container
+     });
+     controls.forEach((control) => {
+      this.setMessageState(control, {message: "", severity: "None"});
+     });
+  }
+
+  private onValidateBeforeSubmit(container : Dialog) {
+     const controls = this.getFormControlsByFieldGroup<InputBase>({
+      groupId: "FormField",
+      container: container,
+    });
+
+    const isValid = this.validateControls(controls);
+
+    if (isValid) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  private validateControls(controls: InputBase[]) {
+    let isValid = false;
+    let isError = false;
+
+    controls.forEach((control) => {
+      isError = this.validateControl(control);
+
+      isValid = isValid || isError;
+    });
+
+    return !isValid;
+  }
+
+  private validateControl(control: InputBase): boolean {
+    let isError = false;
+
+    this.setMessageState(control, {
+      message: "",
+      severity: "None",
+    });
+
+    let requiredError = false;
+    let outOfRangeError = false;
+    let dateRangeError = false;
+    let pastDateError = false;
+
+    let value: string = "";
+
+    switch (true) {
+      case this.isControl<Input>(control, "sap.m.Input"): {
+        value = control.getValue().trim();
+
+        if (!value && control.getRequired()) {
+          requiredError = true;
+        }
+
+        break;
+      }
+      case this.isControl<TextArea>(control, "sap.m.TextArea"): {
+        value = control.getValue().trim();
+
+        if (!value && control.getRequired()) {
+          requiredError = true;
+        }
+
+        break;
+      }
+      case this.isControl<DatePicker>(control, "sap.m.DatePicker"): {
+        value = control.getValue();
+
+        if (!value && control.getRequired()) {
+          requiredError = true;
+        } else if (value && !control.isValidValue()) {
+          outOfRangeError = true;
+        } else {
+          // Bổ sung kiểm tra ngày hợp lệ nếu cần
+          const today = new Date();
+          today.setHours(0, 0, 0, 0); // normalize today
+
+          const pickedDate = control.getDateValue(); // returns JS Date object
+
+          if (pickedDate && pickedDate < today) {
+            pastDateError = true;
+          }
+        }
+
+        break;
+      }
+      case this.isControl<ComboBox>(control, "sap.m.ComboBox"): {
+        value = control.getSelectedKey();
+
+        const input = control.getValue().trim();
+
+        if (!value && input) {
+          outOfRangeError = true;
+        } else if (!value && control.getRequired()) {
+          requiredError = true;
+        }
+
+        break;
+      }
+      default:
+        break;
+    }
+
+    if (requiredError) {
+      this.setMessageState(control, {
+        message: "Required",
+        severity: "Error",
+      });
+
+      isError = true;
+      
+    } else if (outOfRangeError) {
+      this.setMessageState(control, {
+        message: "Invalid value",
+        severity: "Error",
+      });
+
+      isError = true;
+
+    } else if (pastDateError) {
+      this.setMessageState(control, {
+        message: "Date cannot be in the past",
+        severity: "Error",
+      });
+
+      isError = true;
+
+    } else if (dateRangeError) {
+      this.setMessageState(control, {
+        message: "Start date must be before end date",
+        severity: "Error",
+      });
+
+      isError = true;
+    }
+
+    return isError;
+  }
+
+  private setMessageState(
+    control: InputBase,
+    options: {
+      message: string;
+      severity: keyof typeof ValueState;
+    }
+  ) {
+    const { message, severity } = options;
+
+    control.setValueState(severity);
+    control.setValueStateText?.(message);
+  }
+
   public onRadioSelectionChange(event: RadioButtonGroup$SelectEvent) {
     const control = event.getSource();
 
@@ -750,7 +936,7 @@ export default class Main extends Base {
   }
   // #endregion Convert
 
-   // #region Excel export
+  // #region Excel export
   public onExportExcel(): void {
     const Cols: Column[] = [
       { label: "Mã đơn nghỉ", property: "RequestId", type: EdmType.String },
@@ -790,6 +976,4 @@ export default class Main extends Base {
       });
   }
   // #endregion Excel
-
-
 }

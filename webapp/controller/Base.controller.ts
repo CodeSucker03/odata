@@ -12,6 +12,19 @@ import type ODataModel from "sap/ui/model/odata/v2/ODataModel";
 import ResourceModel from "sap/ui/model/resource/ResourceModel";
 import type Component from "../Component";
 
+
+const formControlTypes = [
+  "sap.m.Input",
+  "sap.m.TextArea",
+  "sap.m.DatePicker",
+  "sap.m.Select",
+  "sap.m.RadioButtonGroup",
+  "sap.m.CheckBox",
+  "sap.m.ComboBox",
+] as const;
+
+type FormControlType = (typeof formControlTypes)[number];
+
 /**
  * @namespace base.controller
  */
@@ -121,4 +134,39 @@ export default class Base extends Controller {
 
     void this.getRouter().getTargets()?.display(target);
   }
+  
+/**
+  * Get all form controls (Input, Select, DatePicker, etc.)
+ * that belong to a specific FieldGroupId.
+ *
+ * - Searches inside the given container (or whole view if none).
+ * - Filters only valid form controls (based on given types).
+ * - Filters out invisible controls.
+ *
+ * @param props.groupId  One or more FieldGroupId values to match.
+ * @param props.container Optional control to search inside.
+ * @param props.types Optional allowed control types (defaults to all form controls).
+ */
+protected getFormControlsByFieldGroup<T extends Control>(props: {
+  groupId: string | string[];
+  container?: Control;
+  types?: readonly FormControlType[];
+}) {
+  const { groupId, container, types = formControlTypes } = props;
+
+  // If no container specified then use the entire View
+  const _container = container ?? this.getView();
+
+  if (!_container) return [];
+
+  return _container.getControlsByFieldGroupId(groupId).filter((control) => {
+    
+     // Check if control is one of the allowed types
+      const isFormControl = types.some(type => this.isControl(control, type));
+
+      const isVisible = control.getVisible();
+
+      return isFormControl && isVisible;
+    }) as T[];
+ }
 }
