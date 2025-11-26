@@ -39,6 +39,7 @@ import { EdmType } from "sap/ui/export/library";
 import type { Column } from "base/utils/DataTypes";
 import InputBase from "sap/m/InputBase";
 import type Event from "sap/ui/base/Event";
+import type Control from "sap/ui/core/Control";
 
 /**
  * @namespace base.controller
@@ -577,8 +578,8 @@ export default class Main extends Base {
 
     const indices = this.table.getSelectedIndices();
     const item = <LeaveRequestItem>this.table?.getContextByIndex(indices[0])?.getObject();
-    
-    // Create key to edit 
+
+    // Create key to edit
     const key = oDataModel.createKey("/LeaveRequestSet", item);
 
     const { LeaveType, StartDate, EndDate, Reason, TimeSlot } = formData;
@@ -678,18 +679,19 @@ export default class Main extends Base {
     }
   }
 
-  private resetValidate(container : Dialog) {
-     const controls = this.getFormControlsByFieldGroup<InputBase>({
+  // Function to reset validate state when change dialog
+  private resetValidate(container: Dialog) {
+    const controls = this.getFormControlsByFieldGroup<InputBase>({
       groupId: "FormField",
-      container: container
-     });
-     controls.forEach((control) => {
-      this.setMessageState(control, {message: "", severity: "None"});
-     });
+      container: container,
+    });
+    controls.forEach((control) => {
+      this.setMessageState(control, { message: "", severity: "None" });
+    });
   }
 
-  private onValidateBeforeSubmit(container : Dialog) {
-     const controls = this.getFormControlsByFieldGroup<InputBase>({
+  private onValidateBeforeSubmit(container: Dialog) {
+    const controls = this.getFormControlsByFieldGroup<InputBase>({
       groupId: "FormField",
       container: container,
     });
@@ -753,20 +755,18 @@ export default class Main extends Base {
       case this.isControl<DatePicker>(control, "sap.m.DatePicker"): {
         value = control.getValue();
 
+        console.log(value);
+
         if (!value && control.getRequired()) {
           requiredError = true;
         } else if (value && !control.isValidValue()) {
+          console.log("invalid");
           outOfRangeError = true;
+        } else if (this.checkPastDateError(control)) {
+          pastDateError = true;
         } else {
           // Bổ sung kiểm tra ngày hợp lệ nếu cần
-          const today = new Date();
-          today.setHours(0, 0, 0, 0); // normalize today
-
-          const pickedDate = control.getDateValue(); // returns JS Date object
-
-          if (pickedDate && pickedDate < today) {
-            pastDateError = true;
-          }
+          dateRangeError = this.checkdateRangeError(control.getFieldGroupIds()[0]);
         }
 
         break;
@@ -795,7 +795,6 @@ export default class Main extends Base {
       });
 
       isError = true;
-      
     } else if (outOfRangeError) {
       this.setMessageState(control, {
         message: "Invalid value",
@@ -803,7 +802,6 @@ export default class Main extends Base {
       });
 
       isError = true;
-
     } else if (pastDateError) {
       this.setMessageState(control, {
         message: "Date cannot be in the past",
@@ -811,7 +809,6 @@ export default class Main extends Base {
       });
 
       isError = true;
-
     } else if (dateRangeError) {
       this.setMessageState(control, {
         message: "Start date must be before end date",
@@ -835,6 +832,79 @@ export default class Main extends Base {
 
     control.setValueState(severity);
     control.setValueStateText?.(message);
+  }
+
+  private checkPastDateError(control: DatePicker) {
+    let PastDateError = false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // normalize today
+
+    const pickedDate = control.getDateValue(); // returns JS Date object
+
+    if (pickedDate && pickedDate < today) {
+      PastDateError = true;
+    }
+    return PastDateError;
+  }
+
+  // Function to compare two dates given a FieldGroupid and return true false
+  private checkdateRangeError(GroupId: string) {
+    let dateRangeError = false;
+
+    const controls = this.getFormControlsByFieldGroup<InputBase>({
+      groupId: GroupId,
+    });
+
+    const startControl = <DatePicker>(
+      controls.find((c) => this.isControl<DatePicker>(c, "sap.m.DatePicker") && c.getName() === "StartDate")
+    );
+    const endControl = <DatePicker>(
+      controls.find((c) => this.isControl<DatePicker>(c, "sap.m.DatePicker") && c.getName() === "EndDate")
+    );
+
+    const datePickers = [startControl, endControl];
+
+    // Reset control state only get error Start date must be before end date
+    if (
+      endControl.getValueState() === "Error" &&
+      endControl.getValueStateText() === "Start date must be before end date"
+    ) {
+      this.setMessageState(endControl, {
+        message: "",
+        severity: "None",
+      });
+    }
+
+    const startDate = startControl?.getDateValue();
+    const endDate = endControl?.getDateValue();
+
+    if (startDate > endDate) {
+      dateRangeError = true;
+
+      // Set controls state to error
+      datePickers.forEach((control) => {
+        this.setMessageState(control, {
+          message: "Start date must be before end date",
+          severity: "Error",
+        });
+      });
+    } else {
+
+      // clear controls state if valid
+      datePickers.forEach((control) => {
+        if (
+          control.getValueState() === "Error" &&
+          control.getValueStateText() === "Start date must be before end date"
+        ) {
+          this.setMessageState(control, {
+            message: "",
+            severity: "None",
+          });
+        }
+      });
+    }
+    
+    return dateRangeError;
   }
 
   public onRadioSelectionChange(event: RadioButtonGroup$SelectEvent) {

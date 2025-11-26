@@ -21,6 +21,8 @@
                     required="true"
                     items="{master>/LeaveType}"
                     selectedKey="{form>LeaveType}"
+                    change="onChangeValue"
+                    fieldGroupIds="FormField"
                 >
                     <items>
                         <core:Item
@@ -35,10 +37,13 @@
                     required="true"
                 />
                 <DatePicker
+                    name="StartDate"
                     required="true"
                     valueFormat="yyyyMMdd"
                     displayFormat="dd.MM.yyyy"
                     value="{form>StartDate}"
+                    change="onChangeValue"
+                    fieldGroupIds="FormField"
                 />
 
                 <Label
@@ -46,10 +51,13 @@
                     required="true"
                 />
                 <DatePicker
+                    name="EndDate"
                     required="true"
                     valueFormat="yyyyMMdd"
                     displayFormat="dd.MM.yyyy"
                     value="{form>EndDate}"
+                    change="onChangeValue"
+                    fieldGroupIds="FormField"
                 />
 
                 <Label
@@ -61,6 +69,7 @@
                     columns="4"
                     selectedIndex="{form>TimeSlotIndex}"
                     select=".onRadioSelectionChange"
+                    fieldGroupIds="FormField"
                 >
                     <buttons>
                         <RadioButton text="{master>FieldValue}" />
@@ -76,6 +85,8 @@
                     rows="3"
                     growingMaxLines="3"
                     value="{form>Reason}"
+                     change="onChangeValue"
+                    fieldGroupIds="FormField"
                 />
             </form:SimpleForm>
         </content>
