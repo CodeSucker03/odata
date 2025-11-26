@@ -90,18 +90,28 @@
                 />
             </form:SimpleForm>
         </content>
-        <beginButton>
-            <Button
+        <footer>
+          <Toolbar >
+             <Button id="messagePopover"
+					visible="{=!!${message>/}.length}"
+					icon="{ path: '/', formatter: '.buttonIconFormatter' }"
+					type="{ path: '/', formatter: '.buttonTypeFormatter' }"
+					text= "{path: '/', formatter: '.highestSeverityMessages' }"
+					press=".handleMessagePopoverPress"
+					ariaHasPopup="Dialog"/>
+			<ToolbarSpacer/>
+             <Button
                 text="Submit"
                 type="Emphasized"
                 press="onSubmitCreateRequest"
             />
-        </beginButton>
-        <endButton>
             <Button
-                text="Cancel"
-                press="onCloseCreateRequest"
+            text="Cancel"
+             press="onCloseCreateRequest"
             />
-        </endButton>
+          
+          </Toolbar>
+    
+        </footer>
     </Dialog>
 </core:FragmentDefinition>

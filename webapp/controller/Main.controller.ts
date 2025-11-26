@@ -39,7 +39,15 @@ import { EdmType } from "sap/ui/export/library";
 import type { Column } from "base/utils/DataTypes";
 import InputBase from "sap/m/InputBase";
 import type Event from "sap/ui/base/Event";
-import type Control from "sap/ui/core/Control";
+import Messaging from "sap/ui/core/Messaging";
+import Core from "sap/ui/core/Core";
+import MessagePopover from "sap/m/MessagePopover";
+import Message from "sap/ui/core/message/Message";
+import ElementRegistry from "sap/ui/core/ElementRegistry";
+import MessageItem from "sap/m/MessageItem";
+import type ValueStateSupport from "sap/ui/core/ValueStateSupport";
+import { ButtonType } from "sap/m/library";
+import MessageType from "sap/ui/core/message/MessageType";
 
 /**
  * @namespace base.controller
@@ -59,6 +67,10 @@ export default class Main extends Base {
   // Fragments
   private createRequestDialog: Dialog;
   private editRequestDialog: Dialog;
+
+  // MessagePopover Manager
+  private MessageManager: Messaging;
+  private MessagePopover: MessagePopover;
 
   public override onInit(): void {
     this.view = <View>this.getView();
@@ -103,6 +115,13 @@ export default class Main extends Base {
       })
     );
     this.svm.initialise(noop, this.filterBar);
+
+    // MessagePopover Manager
+    this.MessageManager = Messaging;
+    this.MessageManager.removeAllMessages();
+    this.setModel(this.MessageManager.getMessageModel(), "message");
+
+    this.createMessagePopover();
 
     // Router
     this.router.getRoute("RouteMain")?.attachMatched(this.onObjectMatched);
@@ -458,7 +477,15 @@ export default class Main extends Base {
     try {
       if (!this.createRequestDialog) {
         this.createRequestDialog = await this.loadView<Dialog>("CreateRequest");
+
+        // Register Message once
+        this.MessageManager.registerObject(this.createRequestDialog, true);
+
+        this.createRequestDialog.addDependent(this.MessagePopover);
       }
+
+      // Clear old messages
+      this.MessageManager.removeAllMessages();
 
       this.createRequestDialog.setModel(
         new JSONModel({
@@ -507,6 +534,15 @@ export default class Main extends Base {
       return;
     }
 
+    // #region Attach Change in Message to button
+    this.MessagePopover.getBinding("items")?.attachChange(() =>{
+				this.MessagePopover?.navigateBack();
+				control.setType(this.buttonTypeFormatter());
+				control.setIcon(this.buttonIconFormatter());
+				control.setText(this.highestSeverityMessages());
+			});
+    //
+
     dialog.setBusy(true);
     oDataModel.create(
       "/LeaveRequestSet",
@@ -549,8 +585,8 @@ export default class Main extends Base {
 
       const form = {
         ...SelectedItem,
-        StartDate: this.formatter.formatDate(SelectedItem.StartDate),
-        EndDate: this.formatter.formatDate(SelectedItem.EndDate),
+        StartDate: this.formatter.formatDate(SelectedItem.StartDate, "dd.MM.yyyy", "yyyyMMdd"),
+        EndDate: this.formatter.formatDate(SelectedItem.EndDate, "dd.MM.yyyy", "yyyyMMdd"),
         TimeSlotIndex: this.timeSlotToIndex(SelectedItem.TimeSlot),
       };
 
@@ -674,6 +710,8 @@ export default class Main extends Base {
       if (control.getVisible()) {
         this.validateControl(control);
       }
+
+
     } catch (error) {
       console.log(error);
     }
@@ -755,12 +793,9 @@ export default class Main extends Base {
       case this.isControl<DatePicker>(control, "sap.m.DatePicker"): {
         value = control.getValue();
 
-        console.log(value);
-
         if (!value && control.getRequired()) {
           requiredError = true;
         } else if (value && !control.isValidValue()) {
-          console.log("invalid");
           outOfRangeError = true;
         } else if (this.checkPastDateError(control)) {
           pastDateError = true;
@@ -830,10 +865,28 @@ export default class Main extends Base {
   ) {
     const { message, severity } = options;
 
+    // #region Add Messages to MessageManager
+    let Target = control.getBindingContext()?.getPath() + "/" + control.getBindingPath("value");
+
+    console.log(Target);
+
+    this.removeMessageFromTarget(Target);
+
+    this.MessageManager.addMessages(
+					new Message({
+						message: message,
+						type: severity,
+						additionalText: control.getMetadata().getName(),
+						target: Target,
+						processor: this.getModel("form")
+					})
+				);
+
     control.setValueState(severity);
     control.setValueStateText?.(message);
   }
 
+  // Fucntion to check past date return true/false
   private checkPastDateError(control: DatePicker) {
     let PastDateError = false;
     const today = new Date();
@@ -864,17 +917,6 @@ export default class Main extends Base {
 
     const datePickers = [startControl, endControl];
 
-    // Reset control state only get error Start date must be before end date
-    if (
-      endControl.getValueState() === "Error" &&
-      endControl.getValueStateText() === "Start date must be before end date"
-    ) {
-      this.setMessageState(endControl, {
-        message: "",
-        severity: "None",
-      });
-    }
-
     const startDate = startControl?.getDateValue();
     const endDate = endControl?.getDateValue();
 
@@ -889,7 +931,6 @@ export default class Main extends Base {
         });
       });
     } else {
-
       // clear controls state if valid
       datePickers.forEach((control) => {
         if (
@@ -903,7 +944,7 @@ export default class Main extends Base {
         }
       });
     }
-    
+
     return dateRangeError;
   }
 
@@ -923,6 +964,159 @@ export default class Main extends Base {
     formModel.setProperty(`${path}/TimeSlot`, FieldKey);
   }
   // #endregion Validation
+
+  // #region Message Popover
+
+  public handleMessagePopoverPress(event : Button$PressEvent){
+    if (!this.MessagePopover) {
+     this.createMessagePopover(); 
+    }
+
+    this.MessagePopover.toggle(event.getSource());
+  }
+
+  private createMessagePopover(): void {
+    this.MessagePopover = new MessagePopover({
+      activeTitlePress: (Event) => {
+        const item = Event.getParameter("item");
+        if (!item) return;
+
+        const msg = <Message>item.getBindingContext("message")?.getObject();
+        if (!msg) return;
+
+        const controlId = msg.getControlId();
+        const control = ElementRegistry.get(controlId);
+
+        if (control && control.isFocusable?.()) {
+          control.focus();
+        }
+      },
+
+      items: {
+        path: "message>/",
+        template: new MessageItem({
+          title: "{message>message}",
+          subtitle: "{message>additionalText}",
+          groupName: {
+            parts: [{ path: "message>controlIds" }],
+            // formatter: this.getGroupName.bind(this)
+          },
+          activeTitle: {
+            parts: [{ path: "message>controlIds" }],
+            // formatter: this.isPositionable.bind(this)
+          },
+          type: "{message>type}",
+          description: "{message>message}",
+        }),
+      },
+
+      groupItems: false,
+    });
+  }
+
+
+  private removeMessageFromTarget(target: string): void {
+    const messageModel = this.MessageManager.getMessageModel();
+    const messages: Message[] = <Message[]>messageModel.getData() || [];
+
+    // Find all messages whose target list contains target
+    const matchedMessages = messages.filter((msg: Message) => {
+      const targets = msg.getTargets?.() || [];
+      return targets.includes(target);
+    });
+
+    // Remove matched Messages
+    if (matchedMessages.length > 0) {
+      this.MessageManager.removeMessages(matchedMessages);
+    }
+  }
+
+  // Display the button type according to the message with the highest severity | Error > Warning > Success > Info
+  private buttonTypeFormatter(): ButtonType {
+    let HighestSeverity: ButtonType = ButtonType.Neutral;
+
+    let Messages = <Message[]>this.MessageManager.getMessageModel().getData();
+
+    console.log("oData ", this.MessageManager.getMessageModel().getData());
+    Messages.forEach((Message: Message) => {
+      switch (Message.getType()) {
+        case "Error":
+          HighestSeverity = ButtonType.Negative;
+          break;
+        case "Warning":
+          HighestSeverity = HighestSeverity !== ButtonType.Negative ? ButtonType.Critical : HighestSeverity;
+          break;
+        case "Success":
+          HighestSeverity = HighestSeverity !== ButtonType.Negative && HighestSeverity !== ButtonType.Critical  ? ButtonType.Success : HighestSeverity;
+          break;
+        default:
+          HighestSeverity = !HighestSeverity ? ButtonType.Neutral : HighestSeverity;
+          break;
+      }
+    });
+
+    return HighestSeverity;
+  }
+
+  // Display the number of messages with the highest severity
+  private highestSeverityMessages(): string {
+    let HighestSeverityIconType : ButtonType = this.buttonTypeFormatter();
+
+    let HighestSeverityMessageType: MessageType = MessageType.Information;
+
+    switch (HighestSeverityIconType) {
+      case ButtonType.Negative:
+        HighestSeverityMessageType = MessageType.Error;
+        break;
+
+      case ButtonType.Critical:
+        HighestSeverityMessageType = MessageType.Warning;
+        break;
+
+      case ButtonType.Success:
+        HighestSeverityMessageType = MessageType.Success;
+        break;
+
+      default:
+        HighestSeverityMessageType = HighestSeverityMessageType ?? MessageType.Information;
+        break;
+    }
+
+    const messages = <Message[]>this.MessageManager.getMessageModel().getObject("/") || [];
+
+    const count = messages.reduce((total : number, msg : Message) => {
+      return msg.getType() === HighestSeverityMessageType ? total + 1 : total;
+    }, 0);
+
+    return count.toString() || "";
+  }
+
+  // Set the button icon according to the message with the highest severity
+  private buttonIconFormatter() : string {
+    var sIcon: string = "";
+    var Messages: Message[] = <Message[]>this.MessageManager.getMessageModel().getData() || [];
+
+    Messages.forEach((Message) => {
+      switch (Message.getType()) {
+        case "Error":
+          sIcon = "sap-icon://error";
+          break;
+        case "Warning":
+          sIcon = sIcon !== "sap-icon://error" ? "sap-icon://alert" : sIcon;
+          break;
+        case "Success":
+          sIcon = sIcon !== "sap-icon://error" && sIcon !== "sap-icon://alert" ? "sap-icon://sys-enter-2" : sIcon;
+          break;
+        default:
+          sIcon = !sIcon ? "sap-icon://information" : sIcon;
+          break;
+      }
+    });
+
+    return sIcon;
+  }
+
+  // #endregion Message Popover
 
   // #region Formatters
   public formatStatusText(statusKey: string): string {
