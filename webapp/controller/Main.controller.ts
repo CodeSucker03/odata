@@ -52,6 +52,8 @@ import type Control from "sap/ui/core/Control";
 import type SimpleForm from "sap/ui/layout/form/SimpleForm";
 import type FormElement from "sap/ui/layout/form/FormElement";
 import type Button from "sap/m/Button";
+import type CheckBox from "sap/m/CheckBox";
+import type Switch from "sap/m/Switch";
 
 /**
  * @namespace base.controller
@@ -168,32 +170,53 @@ export default class Main extends Base {
         let fieldData: string | string[] = "";
 
         switch (true) {
-          case this.isControl<Input>(control, "sap.m.Input"):
+          case this.isControl<Input>(control, "sap.m.Input"): {
+            fieldData = control.getValue();
+            break;
+          }
+
           case this.isControl<TextArea>(control, "sap.m.TextArea"): {
             fieldData = control.getValue();
-
             break;
           }
+
           case this.isControl<MultiInput>(control, "sap.m.MultiInput"): {
             fieldData = control.getTokens().map((token) => token.getKey());
-
             break;
           }
-          case this.isControl<DatePicker>(control, "sap.m.DatePicker"):
+
+          case this.isControl<DatePicker>(control, "sap.m.DatePicker"): {
+            fieldData = control.getValue();
+            break;
+          }
+
           case this.isControl<TimePicker>(control, "sap.m.TimePicker"): {
             fieldData = control.getValue();
-
             break;
           }
-          case this.isControl<Select>(control, "sap.m.Select"):
-          case this.isControl<ComboBox>(control, "sap.m.ComboBox"): {
-            fieldData = control.getSelectedKey();
 
-            break;
-          }
           case this.isControl<MultiComboBox>(control, "sap.m.MultiComboBox"): {
             fieldData = control.getSelectedKeys();
+            break;
+          }
 
+          case this.isControl<Select>(control, "sap.m.Select"): {
+            fieldData = control.getSelectedKey();
+            break;
+          }
+
+          case this.isControl<ComboBox>(control, "sap.m.ComboBox"): {
+            fieldData = control.getSelectedKey();
+            break;
+          }
+
+          case this.isControl<CheckBox>(control, "sap.m.CheckBox"): {
+            fieldData = control.getSelected().toString();
+            break;
+          }
+
+          case this.isControl<Switch>(control, "sap.m.Switch"): {
+            fieldData = control.getState().toString();
             break;
           }
           default:
@@ -220,40 +243,60 @@ export default class Main extends Base {
 
       const control = this.filterBar.determineControlByName(fieldName, groupName);
 
-      switch (true) {
-        case this.isControl<Input>(control, "sap.m.Input"):
-        case this.isControl<TextArea>(control, "sap.m.TextArea"): {
-          control.setValue(<string>fieldData);
+    switch (true) {
+          case this.isControl<Input>(control, "sap.m.Input"): {
+            control.setValue(<string>fieldData);
+            break;
+          }
 
-          break;
+          case this.isControl<TextArea>(control, "sap.m.TextArea"): {
+            control.setValue(<string>fieldData);
+            break;
+          }
+
+          case this.isControl<MultiInput>(control, "sap.m.MultiInput"): {
+            const tokens = (<string[]>fieldData).map((key) => new Token({ key, text: key }));
+            control.setTokens(tokens);
+            break;
+          }
+
+          case this.isControl<DatePicker>(control, "sap.m.DatePicker"): {
+            control.setValue(<string>fieldData);
+            break;
+          }
+
+          case this.isControl<TimePicker>(control, "sap.m.TimePicker"): {
+            control.setValue(<string>fieldData);
+            break;
+          }
+
+          case this.isControl<MultiComboBox>(control, "sap.m.MultiComboBox"): {
+            control.setSelectedKeys(<string[]>fieldData);
+            break;
+          }
+
+          case this.isControl<Select>(control, "sap.m.Select"): {
+            control.setSelectedKey(<string>fieldData);
+            break;
+          }
+
+          case this.isControl<ComboBox>(control, "sap.m.ComboBox"): {
+            control.setSelectedKey(<string>fieldData);
+            break;
+          }
+
+          case this.isControl<CheckBox>(control, "sap.m.CheckBox"): {
+            control.setSelected();
+            break;
+          }
+
+          case this.isControl<Switch>(control, "sap.m.Switch"): {
+            control.setState();
+            break;
+          }
+          default:
+            break;
         }
-        case this.isControl<MultiInput>(control, "sap.m.MultiInput"): {
-          const tokens = (<string[]>fieldData).map((key) => new Token({ key, text: key }));
-
-          control.setTokens(tokens);
-
-          break;
-        }
-        case this.isControl<DatePicker>(control, "sap.m.DatePicker"):
-        case this.isControl<TimePicker>(control, "sap.m.TimePicker"): {
-          control.setValue(<string>fieldData);
-
-          break;
-        }
-        case this.isControl<Select>(control, "sap.m.Select"):
-        case this.isControl<ComboBox>(control, "sap.m.ComboBox"): {
-          control.setSelectedKey(<string>fieldData);
-
-          break;
-        }
-        case this.isControl<MultiComboBox>(control, "sap.m.MultiComboBox"): {
-          control.setSelectedKeys(<string[]>fieldData);
-
-          break;
-        }
-        default:
-          break;
-      }
     });
   };
 
@@ -264,52 +307,86 @@ export default class Main extends Base {
 
       if (control) {
         switch (true) {
-          case this.isControl<Input>(control, "sap.m.Input"):
-          case this.isControl<TextArea>(control, "sap.m.TextArea"): {
+          case this.isControl<Input>(control, "sap.m.Input"): {
             const value = control.getValue();
-
             if (value) {
               acc.push(item);
             }
-
             break;
           }
+
+          case this.isControl<TextArea>(control, "sap.m.TextArea"): {
+            const value = control.getValue();
+            if (value) {
+              acc.push(item);
+            }
+            break;
+          }
+
           case this.isControl<MultiInput>(control, "sap.m.MultiInput"): {
             const tokens = control.getTokens();
 
             if (tokens.length) {
               acc.push(item);
             }
-
             break;
           }
-          case this.isControl<DatePicker>(control, "sap.m.DatePicker"):
+
+          case this.isControl<DatePicker>(control, "sap.m.DatePicker"): {
+            const value = control.getValue();
+
+            if (value) {
+              acc.push(item);
+            }
+            break;
+          }
+
           case this.isControl<TimePicker>(control, "sap.m.TimePicker"): {
             const value = control.getValue();
 
             if (value) {
               acc.push(item);
             }
-
             break;
           }
-          case this.isControl<Select>(control, "sap.m.Select"):
-          case this.isControl<ComboBox>(control, "sap.m.ComboBox"): {
-            const value = control.getSelectedKey();
 
-            if (value) {
-              acc.push(item);
-            }
-
-            break;
-          }
           case this.isControl<MultiComboBox>(control, "sap.m.MultiComboBox"): {
             const keys = control.getSelectedKeys();
-
             if (keys.length) {
               acc.push(item);
             }
+            break;
+          }
 
+          case this.isControl<Select>(control, "sap.m.Select"): {
+            const key = control.getSelectedKey();
+            if (key) {
+              acc.push(item);
+            }
+            break;
+          }
+
+          case this.isControl<ComboBox>(control, "sap.m.ComboBox"): {
+            const key = control.getSelectedKey();
+            if (key) {
+              acc.push(item);
+            }
+            break;
+          }
+
+          case this.isControl<CheckBox>(control, "sap.m.CheckBox"): {
+            const value = control.getSelected().toString();
+            if (value) {
+              acc.push(item);
+            }
+            break;
+          }
+
+          case this.isControl<Switch>(control, "sap.m.Switch"): {
+            const value = control.getState().toString();
+            if (value) {
+              acc.push(item);
+            }
             break;
           }
           default:

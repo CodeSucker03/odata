@@ -185,13 +185,9 @@
                             <Label text="Ngày tạo" />
                         </table:label>
                         <table:template>
-                            <Text  text="{
+                            <Text text="{
                                     path: 'table>CreatedAt',
-                                    type: 'sap.ui.model.type.DateTime',
-                                    formatOptions: {
-                                        pattern: 'dd.MM.yyyy',
-                                        UTC: true
-                                    }
+                                    formatter: '.formatter.formatDate'
                                 }" />
                         </table:template>
                     </table:Column>
@@ -227,14 +223,10 @@
                             <Label text="Ngày bắt đầu" />
                         </table:label>
                         <table:template>
-                            <Text text=
-                            "{path: 'table>StartDate', 
-                             type: 'sap.ui.model.type.DateTime',
-                             formatOptions: {
-                                        pattern: 'dd.MM.yyyy',
-                                        UTC: true
-                                    }
-                             }" />
+                            <Text text="{
+                                    path: 'table>StartDate',
+                                    formatter: '.formatter.formatDate'
+                                }" />
                         </table:template>
                     </table:Column>
 
@@ -243,13 +235,11 @@
                             <Label text="Ngày kết thúc" />
                         </table:label>
                         <table:template>
-                            <Text text="{path: 'table>EndDate', 
-                            type: 'sap.ui.model.type.DateTime', 
-                            formatOptions: { style: 'medium', 
-                                        pattern: 'dd.MM.yyyy',
-                                        UTC: true
-                                      }
-                                    }" />
+                            <Text 
+                            text="{
+                            path: 'table>EndDate',
+                            formatter: '.formatter.formatDate'
+                            }" />
                         </table:template>
                     </table:Column>
 
@@ -268,9 +258,10 @@
                             <Label text="Trạng thái" />
                         </table:label>
                         <table:template>
-                            <ObjectStatus text="{= ${table>Status} === '01' ? 'New' : ${table>Status} === '02' ? 'Approved' : 'Rejected' }" 
-                            inverted="true" icon="sap-icon://information" 
-                            state="{= ${table>Status} === '01' ? 'Information' : ${table>Status} === '02' ? 'Success' : 'Error' }" />
+                            <ObjectStatus 
+                            text="{path: 'table>Status', formatter: '.formatStatusText'}"
+                                state="{path: 'table>Status', formatter: '.formatStatusState'}"
+                                inverted="true" />
                         </table:template>
                     </table:Column>
                 </table:columns>
