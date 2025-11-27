@@ -48,6 +48,10 @@ import MessageItem from "sap/m/MessageItem";
 import type ValueStateSupport from "sap/ui/core/ValueStateSupport";
 import { ButtonType } from "sap/m/library";
 import MessageType from "sap/ui/core/message/MessageType";
+import type Control from "sap/ui/core/Control";
+import type SimpleForm from "sap/ui/layout/form/SimpleForm";
+import type FormElement from "sap/ui/layout/form/FormElement";
+import type Button from "sap/m/Button";
 
 /**
  * @namespace base.controller
@@ -120,8 +124,7 @@ export default class Main extends Base {
     this.MessageManager = Messaging;
     this.MessageManager.removeAllMessages();
     this.setModel(this.MessageManager.getMessageModel(), "message");
-
-    this.createMessagePopover();
+  
 
     // Router
     this.router.getRoute("RouteMain")?.attachMatched(this.onObjectMatched);
@@ -478,7 +481,8 @@ export default class Main extends Base {
       if (!this.createRequestDialog) {
         this.createRequestDialog = await this.loadView<Dialog>("CreateRequest");
 
-        // Register Message once
+        // Register Message Manager once
+        this.createMessagePopover();
         this.MessageManager.registerObject(this.createRequestDialog, true);
 
         this.createRequestDialog.addDependent(this.MessagePopover);
@@ -527,6 +531,17 @@ export default class Main extends Base {
 
     const { LeaveType, StartDate, EndDate, Reason, TimeSlot } = formData;
 
+    const PopoverBtn = this.getControlById<Button>("messagePopoverBtn");
+    
+    // #region Attach Listener for Change in Message 
+    this.MessagePopover.getBinding("items")?.attachChange(() =>{
+				this.MessagePopover?.navigateBack();
+				PopoverBtn.setType(this.buttonTypeFormatter());
+				PopoverBtn.setIcon(this.buttonIconFormatter());
+				PopoverBtn.setText(this.highestSeverityMessages());
+		});
+    //
+
     // Validate with passed dialog
     const isValid = this.onValidateBeforeSubmit(this.createRequestDialog);
 
@@ -534,14 +549,6 @@ export default class Main extends Base {
       return;
     }
 
-    // #region Attach Change in Message to button
-    this.MessagePopover.getBinding("items")?.attachChange(() =>{
-				this.MessagePopover?.navigateBack();
-				control.setType(this.buttonTypeFormatter());
-				control.setIcon(this.buttonIconFormatter());
-				control.setText(this.highestSeverityMessages());
-			});
-    //
 
     dialog.setBusy(true);
     oDataModel.create(
@@ -578,10 +585,21 @@ export default class Main extends Base {
     try {
       if (!this.editRequestDialog) {
         this.editRequestDialog = await this.loadView<Dialog>("EditRequest");
-      }
-      const indices = this.table.getSelectedIndices();
 
+        // Register Message Manager once
+        this.createMessagePopover();
+        this.MessageManager.registerObject(this.editRequestDialog, true);
+
+        this.editRequestDialog.addDependent(this.MessagePopover);
+
+      }
+      // Clear old messages
+      this.MessageManager.removeAllMessages();
+
+      // Get selected index from table
+      const indices = this.table.getSelectedIndices();
       const SelectedItem = <LeaveRequestForm>this.table.getContextByIndex(indices[0])?.getObject();
+
 
       const form = {
         ...SelectedItem,
@@ -612,6 +630,7 @@ export default class Main extends Base {
 
     const oDataModel = this.getModel<ODataModel>();
 
+    // Get selected index from table
     const indices = this.table.getSelectedIndices();
     const item = <LeaveRequestItem>this.table?.getContextByIndex(indices[0])?.getObject();
 
@@ -619,6 +638,16 @@ export default class Main extends Base {
     const key = oDataModel.createKey("/LeaveRequestSet", item);
 
     const { LeaveType, StartDate, EndDate, Reason, TimeSlot } = formData;
+
+    const PopoverBtn = this.getControlById<Button>("messagePopoverBtnEdit");
+    
+    // #region Attach Listener for Change in Message 
+    this.MessagePopover.getBinding("items")?.attachChange(() =>{
+				this.MessagePopover?.navigateBack();
+				PopoverBtn.setType(this.buttonTypeFormatter());
+				PopoverBtn.setIcon(this.buttonIconFormatter());
+				PopoverBtn.setText(this.highestSeverityMessages());
+		});
 
     // Validate with passed dialog
     const isValid = this.onValidateBeforeSubmit(this.editRequestDialog);
@@ -628,6 +657,7 @@ export default class Main extends Base {
     }
 
     dialog.setBusy(true);
+    
     oDataModel.update(
       key,
       {
@@ -702,11 +732,12 @@ export default class Main extends Base {
   // #endregion Event handlers
 
   // #region Validation
-
+  
+  // On change Input Value
   public onChangeValue(event: Event) {
     try {
       const control = event.getSource<InputBase>();
-
+      
       if (control.getVisible()) {
         this.validateControl(control);
       }
@@ -794,12 +825,16 @@ export default class Main extends Base {
         value = control.getValue();
 
         if (!value && control.getRequired()) {
+
           requiredError = true;
         } else if (value && !control.isValidValue()) {
+
           outOfRangeError = true;
         } else if (this.checkPastDateError(control)) {
+
           pastDateError = true;
         } else {
+
           // Bổ sung kiểm tra ngày hợp lệ nếu cần
           dateRangeError = this.checkdateRangeError(control.getFieldGroupIds()[0]);
         }
@@ -812,8 +847,10 @@ export default class Main extends Base {
         const input = control.getValue().trim();
 
         if (!value && input) {
+
           outOfRangeError = true;
         } else if (!value && control.getRequired()) {
+
           requiredError = true;
         }
 
@@ -823,6 +860,7 @@ export default class Main extends Base {
         break;
     }
 
+    // Set Error and Message
     if (requiredError) {
       this.setMessageState(control, {
         message: "Required",
@@ -865,28 +903,15 @@ export default class Main extends Base {
   ) {
     const { message, severity } = options;
 
-    // #region Add Messages to MessageManager
-    let Target = control.getBindingContext()?.getPath() + "/" + control.getBindingPath("value");
-
-    console.log(Target);
-
-    this.removeMessageFromTarget(Target);
-
-    this.MessageManager.addMessages(
-					new Message({
-						message: message,
-						type: severity,
-						additionalText: control.getMetadata().getName(),
-						target: Target,
-						processor: this.getModel("form")
-					})
-				);
-
+    // Add message to Popover
+    this.addMessageToManager(control, "form", message, severity);
+  
     control.setValueState(severity);
     control.setValueStateText?.(message);
   }
 
-  // Fucntion to check past date return true/false
+
+  // Fucntion to check past date Given DatePicker Control return true/false
   private checkPastDateError(control: DatePicker) {
     let PastDateError = false;
     const today = new Date();
@@ -975,6 +1000,71 @@ export default class Main extends Base {
     this.MessagePopover.toggle(event.getSource());
   }
 
+  // Add Message to Message Manager 
+  private addMessageToManager(control: InputBase, modelName : string, message : string, severity : keyof typeof ValueState) {
+    // Get Binding Path of control
+    const Target = this.getTargetPath(control, modelName);
+
+    this.removeMessageFromTarget(Target);
+
+    if (severity === "Information") {
+      console.log("INFO");
+    }
+
+    this.MessageManager.addMessages(
+					new Message({
+						message: message,
+						type: severity,
+						additionalText: this.getLabelText(control),
+						target: Target,
+						processor: this.getModel(modelName)
+					})
+		);
+  }
+
+  // Get Label in A Form layout Given a InputBase Control
+  private getLabelText(control: InputBase): string {
+  if (!control) return "";
+    const SimpleForm = control.getParent() as FormElement;
+
+    const Label = (<Label>SimpleForm.getLabel()).getText();
+    return Label;
+  }
+
+  // Get Control Binding Path
+  private getTargetPath(control: Control, modelName : string): string {
+    const context = control.getBindingContext(modelName);
+    if (!context) return "";
+
+    let basePath = context.getPath();   // maybe "/", or "/form", or "/items/0"
+    let propertyPath: string | undefined;
+
+    // Determine binding property
+    if (
+      this.isControl<Input>(control, "sap.m.Input") ||
+      this.isControl<TextArea>(control, "sap.m.TextArea") ||
+      this.isControl<DatePicker>(control, "sap.m.DatePicker")
+    ) {
+      propertyPath = control.getBindingPath("value");
+    } else if (this.isControl<ComboBox>(control, "sap.m.ComboBox")) {
+      propertyPath = control.getBindingPath("selectedKey");
+    } else {
+      propertyPath = control.getBindingPath("value");
+    }
+
+    if (!propertyPath) return "";
+
+    // --- FIX: remove trailing "/" on basePath to avoid double slash ---
+    if (basePath === "/") {
+      // root level → target is "/Property"
+      return `/${propertyPath}`;
+    }
+
+  // normal case → "/form/StartDate"
+  return `${basePath}/${propertyPath}`;
+  }
+
+  // #region Create MessagePopover 
   private createMessagePopover(): void {
     this.MessagePopover = new MessagePopover({
       activeTitlePress: (Event) => {
@@ -991,7 +1081,6 @@ export default class Main extends Base {
           control.focus();
         }
       },
-
       items: {
         path: "message>/",
         template: new MessageItem({
@@ -1003,7 +1092,7 @@ export default class Main extends Base {
           },
           activeTitle: {
             parts: [{ path: "message>controlIds" }],
-            // formatter: this.isPositionable.bind(this)
+            formatter: this.isPositionable.bind(this)
           },
           type: "{message>type}",
           description: "{message>message}",
@@ -1012,9 +1101,16 @@ export default class Main extends Base {
 
       groupItems: false,
     });
+    
   }
+   // #endregion Create MessagePopover 
 
+	private	isPositionable(ControlId : string) : boolean {
+			// Such a hook can be used by the application to determine if a control can be found/reached on the page and navigated to.
+			return ControlId ? true : true;
+	}
 
+  // Remove message from a control
   private removeMessageFromTarget(target: string): void {
     const messageModel = this.MessageManager.getMessageModel();
     const messages: Message[] = <Message[]>messageModel.getData() || [];
@@ -1035,9 +1131,9 @@ export default class Main extends Base {
   private buttonTypeFormatter(): ButtonType {
     let HighestSeverity: ButtonType = ButtonType.Neutral;
 
+    // Retrieve All Current Message
     let Messages = <Message[]>this.MessageManager.getMessageModel().getData();
 
-    console.log("oData ", this.MessageManager.getMessageModel().getData());
     Messages.forEach((Message: Message) => {
       switch (Message.getType()) {
         case "Error":
@@ -1062,7 +1158,7 @@ export default class Main extends Base {
   private highestSeverityMessages(): string {
     let HighestSeverityIconType : ButtonType = this.buttonTypeFormatter();
 
-    let HighestSeverityMessageType: MessageType = MessageType.Information;
+    let HighestSeverityMessageType: MessageType = MessageType.None;
 
     switch (HighestSeverityIconType) {
       case ButtonType.Negative:
@@ -1078,12 +1174,14 @@ export default class Main extends Base {
         break;
 
       default:
-        HighestSeverityMessageType = HighestSeverityMessageType ?? MessageType.Information;
+        HighestSeverityMessageType = HighestSeverityMessageType ?? MessageType.None;
         break;
     }
+    
+    // Retrieve All Current Message
+    const messages = <Message[]>this.MessageManager.getMessageModel().getData() || [];
 
-    const messages = <Message[]>this.MessageManager.getMessageModel().getObject("/") || [];
-
+    // Get the Highest number of Error in an Error Type
     const count = messages.reduce((total : number, msg : Message) => {
       return msg.getType() === HighestSeverityMessageType ? total + 1 : total;
     }, 0);
@@ -1093,8 +1191,10 @@ export default class Main extends Base {
 
   // Set the button icon according to the message with the highest severity
   private buttonIconFormatter() : string {
-    var sIcon: string = "";
-    var Messages: Message[] = <Message[]>this.MessageManager.getMessageModel().getData() || [];
+    let sIcon: string = "";
+
+    // Retrieve All Current Message
+    let Messages: Message[] = <Message[]>this.MessageManager.getMessageModel().getData() || [];
 
     Messages.forEach((Message) => {
       switch (Message.getType()) {
@@ -1108,7 +1208,6 @@ export default class Main extends Base {
           sIcon = sIcon !== "sap-icon://error" && sIcon !== "sap-icon://alert" ? "sap-icon://sys-enter-2" : sIcon;
           break;
         default:
-          sIcon = !sIcon ? "sap-icon://information" : sIcon;
           break;
       }
     });

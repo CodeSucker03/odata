@@ -21,7 +21,7 @@
                     required="true"
                     items="{master>/LeaveType}"
                     selectedKey="{form>LeaveType}"
-                    change="onChangeValue"
+                    change=".onChangeValue"
                     fieldGroupIds="FormField"
                 >
                     <items>
@@ -42,7 +42,7 @@
                     valueFormat="yyyyMMdd"
                     displayFormat="dd.MM.yyyy"
                     value="{form>StartDate}"
-                    change="onChangeValue"
+                    change=".onChangeValue"
                     fieldGroupIds="FormField"
                 />
 
@@ -56,7 +56,7 @@
                     valueFormat="yyyyMMdd"
                     displayFormat="dd.MM.yyyy"
                     value="{form>EndDate}"
-                    change="onChangeValue"
+                    change=".onChangeValue"
                     fieldGroupIds="FormField"
                 />
 
@@ -85,14 +85,14 @@
                     rows="3"
                     growingMaxLines="3"
                     value="{form>Reason}"
-                    change="onChangeValue"
+                    change=".onChangeValue"
                     fieldGroupIds="FormField"
                 />
             </form:SimpleForm>
         </content>
         <footer>
           <Toolbar >
-             <Button id="messagePopover"
+             <Button id="messagePopoverBtn"
 					visible="{=!!${message>/}.length}"
 					icon="{ path: '/', formatter: '.buttonIconFormatter' }"
 					type="{ path: '/', formatter: '.buttonTypeFormatter' }"
