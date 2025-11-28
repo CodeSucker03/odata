@@ -40,18 +40,15 @@ import type { Column } from "base/utils/DataTypes";
 import InputBase from "sap/m/InputBase";
 import type Event from "sap/ui/base/Event";
 import Messaging from "sap/ui/core/Messaging";
-import Core from "sap/ui/core/Core";
 import MessagePopover from "sap/m/MessagePopover";
 import Message from "sap/ui/core/message/Message";
 import ElementRegistry from "sap/ui/core/ElementRegistry";
 import MessageItem from "sap/m/MessageItem";
-import type ValueStateSupport from "sap/ui/core/ValueStateSupport";
 import { ButtonType } from "sap/m/library";
 import MessageType from "sap/ui/core/message/MessageType";
 import type Control from "sap/ui/core/Control";
-import type SimpleForm from "sap/ui/layout/form/SimpleForm";
 import type FormElement from "sap/ui/layout/form/FormElement";
-import type Button from "sap/m/Button";
+import Button from "sap/m/Button";
 import type CheckBox from "sap/m/CheckBox";
 import type Switch from "sap/m/Switch";
 
@@ -73,6 +70,8 @@ export default class Main extends Base {
   // Fragments
   private createRequestDialog: Dialog;
   private editRequestDialog: Dialog;
+  private currentActiveDialog: Dialog | null;
+  private currentPopoverButton: Button | null;
 
   // MessagePopover Manager
   private MessageManager: Messaging;
@@ -124,10 +123,8 @@ export default class Main extends Base {
 
     // MessagePopover Manager
     this.MessageManager = Messaging;
-    this.MessageManager.removeAllMessages();
     this.setModel(this.MessageManager.getMessageModel(), "message");
   
-
     // Router
     this.router.getRoute("RouteMain")?.attachMatched(this.onObjectMatched);
   }
@@ -581,6 +578,9 @@ export default class Main extends Base {
       );
 
       this.createRequestDialog.open();
+
+      // set active dialog
+      this.currentActiveDialog = this.createRequestDialog;
     } catch (error) {
       console.log(error);
     }
@@ -589,6 +589,9 @@ export default class Main extends Base {
   public onCloseCreateRequest() {
     this.createRequestDialog?.close();
     this.resetValidate(this.createRequestDialog);
+
+    // Reset active dialog
+    this.currentActiveDialog = null;
   }
 
   public onAfterCloseCreateRequest(event: Dialog$AfterCloseEvent) {
@@ -617,7 +620,7 @@ export default class Main extends Base {
 				PopoverBtn.setIcon(this.buttonIconFormatter());
 				PopoverBtn.setText(this.highestSeverityMessages());
 		});
-    //
+    
 
     // Validate with passed dialog
     const isValid = this.onValidateBeforeSubmit(this.createRequestDialog);
@@ -688,6 +691,8 @@ export default class Main extends Base {
       this.editRequestDialog.setModel(new JSONModel(form), "form");
 
       this.editRequestDialog.open();
+         // set active dialog
+      this.currentActiveDialog = this.editRequestDialog;
     } catch (error) {
       console.log(error);
     }
@@ -696,6 +701,9 @@ export default class Main extends Base {
   public onCloseEditRequest() {
     this.editRequestDialog?.close();
     this.resetValidate(this.editRequestDialog);
+
+     // Reset active dialog
+    this.currentActiveDialog = null;
   }
 
   public onSubmitEditRequest(event: Button$PressEvent) {
@@ -818,7 +826,6 @@ export default class Main extends Base {
       if (control.getVisible()) {
         this.validateControl(control);
       }
-
 
     } catch (error) {
       console.log(error);
@@ -980,13 +987,13 @@ export default class Main extends Base {
   ) {
     const { message, severity } = options;
 
-    // Add message to Popover
+    // Add message to Message Manager Popover
     this.addMessageToManager(control, "form", message, severity);
-  
+      
+    // Set text and state directly on control ui
     control.setValueState(severity);
     control.setValueStateText?.(message);
   }
-
 
   // Fucntion to check past date Given DatePicker Control return true/false
   private checkPastDateError(control: DatePicker) {
@@ -1082,21 +1089,22 @@ export default class Main extends Base {
     // Get Binding Path of control
     const Target = this.getTargetPath(control, modelName);
 
+    // clear old message
     this.removeMessageFromTarget(Target);
 
-    if (severity === "Information") {
-      console.log("INFO");
-    }
-
-    this.MessageManager.addMessages(
+    // Add message to Message Manager Popover IF severity !== "None" to avoid adding emty message
+    if (severity !== "None" ) {
+       this.MessageManager.addMessages(
 					new Message({
 						message: message,
 						type: severity,
 						additionalText: this.getLabelText(control),
 						target: Target,
-						processor: this.getModel(modelName)
+						processor: this.currentActiveDialog?.getModel(modelName)
 					})
-		);
+		   );
+    }
+    
   }
 
   // Get Label in A Form layout Given a InputBase Control
@@ -1149,6 +1157,7 @@ export default class Main extends Base {
         if (!item) return;
 
         const msg = <Message>item.getBindingContext("message")?.getObject();
+        console.log(msg);
         if (!msg) return;
 
         const controlId = msg.getControlId();
@@ -1258,6 +1267,8 @@ export default class Main extends Base {
     // Retrieve All Current Message
     const messages = <Message[]>this.MessageManager.getMessageModel().getData() || [];
 
+    console.log(messages);
+
     // Get the Highest number of Error in an Error Type
     const count = messages.reduce((total : number, msg : Message) => {
       return msg.getType() === HighestSeverityMessageType ? total + 1 : total;
@@ -1285,6 +1296,7 @@ export default class Main extends Base {
           sIcon = sIcon !== "sap-icon://error" && sIcon !== "sap-icon://alert" ? "sap-icon://sys-enter-2" : sIcon;
           break;
         default:
+          sIcon = !sIcon ? "sap-icon://sys-enter-2" : sIcon;
           break;
       }
     });
