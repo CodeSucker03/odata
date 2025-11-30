@@ -1,17 +1,14 @@
 <mvc:View
+    xmlns:table="sap.ui.table"
     xmlns:core="sap.ui.core"
+    xmlns:f="sap.f"
     controllerName="base.controller.Main"
     xmlns:mvc="sap.ui.core.mvc"
     xmlns="sap.m"
-    xmlns:f="sap.f"
-    xmlns:fb="sap.ui.comp.filterbar"
     xmlns:svm="sap.ui.comp.smartvariants"
-    xmlns:table="sap.ui.table"
+    xmlns:fb="sap.ui.comp.filterbar"
 >
-    <f:DynamicPage
-        id="dynamicPage"
-        showFooter="true"
-    >
+    <f:DynamicPage headerExpanded="true">
         <f:title>
             <f:DynamicPageTitle>
                 <f:heading>
@@ -39,28 +36,13 @@
                 <f:content>
                     <fb:FilterBar
                         id="filterBar"
-                        persistencyKey="EmployeeTable"
+                        persistencyKey="myPersKey"
                         useToolbar="false"
                         search="onSearch"
                         filterChange="onFilterChange"
                         afterVariantLoad="onAfterVariantLoad"
                     >
                         <fb:filterGroupItems>
-                            <fb:FilterGroupItem
-                                name="StartDate"
-                                label="Ngày bắt đầu"
-                                groupName="Group1"
-                                visibleInFilterBar="true"
-                            >
-                                <fb:control>
-                                    <DatePicker
-                                        name="StartDate"
-                                        displayFormat="dd.MM.yyyy"
-                                        valueFormat="yyyyMMdd"
-                                    />
-                                </fb:control>
-                            </fb:FilterGroupItem>
-
                             <fb:FilterGroupItem
                                 name="LeaveType"
                                 label="Loại phép"
@@ -71,19 +53,14 @@
                                     <ComboBox
                                         name="LeaveType"
                                         selectionChange="onSelectionChange"
+                                        items="{
+                                            path: 'master>/LeaveType'
+                                        }"
                                     >
                                         <items>
                                             <core:Item
-                                                key="01"
-                                                text="Nghỉ ốm"
-                                            />
-                                            <core:Item
-                                                key="02"
-                                                text="Nghỉ việc riêng"
-                                            />
-                                            <core:Item
-                                                key="03"
-                                                text="Nghỉ thai sản"
+                                                key="{master>FieldKey}"
+                                                text="{master>FieldValue}"
                                             />
                                         </items>
                                     </ComboBox>
@@ -93,26 +70,41 @@
                             <fb:FilterGroupItem
                                 name="Status"
                                 label="Trạng thái"
-                                groupName="Group1"
+                                groupName="Group2"
                                 visibleInFilterBar="true"
                             >
                                 <fb:control>
                                     <ComboBox
                                         name="Status"
                                         selectionChange="onSelectionChange"
+                                        items="{path: 'master>/Status'}"
                                     >
                                         <items>
                                             <core:Item
-                                                key="01"
-                                                text="Mới"
+                                                key="{master>FieldKey}"
+                                                text="{master>FieldValue}"
                                             />
+                                        </items>
+                                    </ComboBox>
+                                </fb:control>
+                            </fb:FilterGroupItem>
+
+                            <fb:FilterGroupItem
+                                name="TimeSlot"
+                                label="TimeSlot"
+                                groupName="Group3"
+                                visibleInFilterBar="true"
+                            >
+                                <fb:control>
+                                    <ComboBox
+                                        name="TimeSlot"
+                                        selectionChange="onSelectionChange"
+                                        items="{path: 'master>/TimeSlot'}"
+                                    >
+                                        <items>
                                             <core:Item
-                                                key="02"
-                                                text="Đã duyệt"
-                                            />
-                                            <core:Item
-                                                key="03"
-                                                text="Đã từ chối"
+                                                key="{master>FieldKey}"
+                                                text="{master>FieldValue}"
                                             />
                                         </items>
                                     </ComboBox>
@@ -124,144 +116,139 @@
             </f:DynamicPageHeader>
         </f:header>
         <f:content>
-           <table:Table id="table" rowActionCount="1" rows="{table>/rows}" 
-            rowSelectionChange=".onRowSelectionChange" selectionMode="MultiToggle">
+            <table:Table
+                id="table"
+                rows="{table>/rows}"
+                selectionMode="MultiToggle"
+                rowSelectionChange="onRowSelectionChange"
+                rowActionCount="1"
+            >
                 <table:extension>
                     <OverflowToolbar class="sapMTBHeader-CTX">
                         <Title text="Leave Request" />
-
                         <ToolbarSpacer />
-                        <Button id="addButton" text="Add" tooltip="Add" type="Emphasized"
-                       
-                        icon="sap-icon://add" press=".onOpenCreateRequest" />
-
-                        <Button id="editButton" text="Edit" tooltip="Edit" type="Emphasized"
-                        enabled="{= ${table>/selectedIndices}.length === 1 }"
-                        icon="sap-icon://edit" press=".onOpenEditRequest" />
-
-                        <Button id="deleteButton" text="Delete" tooltip="Delete" 
-                        type="Reject" icon="sap-icon://delete"
-                        enabled="{= ${table>/selectedIndices}.length === 1 }" press=".onDeleteRequest" />
-
+                        <Button
+                            id="btnAdd"
+                            text="Add"
+                            tooltip="Add"
+                            type="Emphasized"
+                            icon="sap-icon://add"
+                            press="onAdd"
+                        />
+                        <Button
+                            id="btnEdit"
+                            text="Edit"
+                            tooltip="Edit"
+                            type="Emphasized"
+                            icon="sap-icon://edit"
+                            enabled="{= ${table>/selectedIndices}.length === 1 }"
+                            press="onEditRequest"
+                        />
+                        <Button
+                            id="btnDelete"
+                            text="Delete"
+                            tooltip="Delete"
+                            type="Reject"
+                            icon="sap-icon://delete"
+                            enabled="{= ${table>/selectedIndices}.length === 1 }"
+                            press="onDeleteRequest"
+                        />
                         <ToolbarSeparator />
-                        <Button icon="sap-icon://excel-attachment" tooltip="Export to Excel" 
-                        press=".onExportExcel" />
+                        <Button
+                            icon="sap-icon://excel-attachment"
+                            tooltip="Export to Excel"
+                            press="onExportExcel"
+                        />
                     </OverflowToolbar>
                 </table:extension>
                 <table:noData>
-                    <IllustratedMessage illustrationType="sapIllus-NoSearchResults" 
-                    enableVerticalResponsiveness="true" />
+                    <IllustratedMessage
+                        illustrationType="sapIllus-NoSearchResults"
+                        enableVerticalResponsiveness="true"
+                    />
                 </table:noData>
                 <table:columns>
-                    <table:Column id="RequestId" sortProperty="RequestId" filterProperty="RequestId">
+                    <table:Column
+                        id="RequestId"
+                        sortProperty="RequestId"
+                        filterProperty="RequestId"
+                    >
                         <table:label>
                             <Label text="Mã đơn nghỉ" />
                         </table:label>
                         <table:template>
-                            <ObjectIdentifier title="{table>RequestId}" titleActive="true" />
+                            <ObjectIdentifier
+                                title="{table>RequestId}"
+                                titleActive="true"
+                            />
                         </table:template>
                     </table:Column>
 
-                    <table:Column id="EmployeeId" sortProperty="EmployeeId" filterProperty="EmployeeId">
+                    <table:Column>
                         <table:label>
-                            <Label text="Mã nhân viên" />
+                            <Label text="Loại phép" />
                         </table:label>
                         <table:template>
-                            <Text text="{table>EmployeeId}" />
+                            <Text text="{table>LeaveType}" />
                         </table:template>
                     </table:Column>
 
-                    <table:Column id="CreatedBy" sortProperty="CreatedBy" filterProperty="CreatedBy">
+                    <table:Column>
                         <table:label>
-                            <Label text="Người tạo" />
+                            <Label text="Ngày bắt đầu nghỉ" />
                         </table:label>
                         <table:template>
-                            <Text text="{table>CreatedBy}" />
-                        </table:template>
-                    </table:Column>
-
-                    <table:Column id="CreatedAt" sortProperty="CreatedAt" filterProperty="CreatedAt">
-                        <table:label>
-                            <Label text="Ngày tạo" />
-                        </table:label>
-                        <table:template>
-                            <Text text="{
-                                    path: 'table>CreatedAt',
-                                    formatter: '.formatter.formatDate'
-                                }" />
-                        </table:template>
-                    </table:Column>
-
-                    <table:Column id="LeaveType" sortProperty="LeaveType" filterProperty="LeaveType">
-                        <table:label>
-                            <Label text="Loại nghỉ phép" />
-                        </table:label>
-                        <table:template>
-                            <Text text="
-                            {= ( ${table>LeaveType} === '01' ) ? 'Annual Leave'
-                                : ( ${table>LeaveType} === '02' ) ? 'Sick Leave'
-                                : ( ${table>LeaveType} === '03' ) ? 'Maternity Leave'
-                                : 'Unpaid Leave'
-                            }" />
-                        </table:template>
-                    </table:Column>
-
-                    <table:Column id="TimeSlot" sortProperty="TimeSlot" filterProperty="TimeSlot">
-                        <table:label>
-                            <Label text="Khung thời gian" />
-                        </table:label>
-                        <table:template>
-                            <Text text=
-                              "{= (${table>TimeSlot} === '01' ) ? 'Full day' 
-                               : ( ${table>TimeSlot} === '02') ? 'Morning' 
-                               : 'Afternoon' 
-                               }" />
-                        </table:template>
-                    </table:Column>
-                    <table:Column id="StartDate" sortProperty="StartDate" filterProperty="StartDate">
-                        <table:label>
-                            <Label text="Ngày bắt đầu" />
-                        </table:label>
-                        <table:template>
-                            <Text text="{
+                            <Text
+                                text="{
                                     path: 'table>StartDate',
                                     formatter: '.formatter.formatDate'
-                                }" />
+                                }"
+                            />
                         </table:template>
                     </table:Column>
 
-                    <table:Column id="EndDate" sortProperty="EndDate" filterProperty="EndDate">
+                    <table:Column>
                         <table:label>
-                            <Label text="Ngày kết thúc" />
+                            <Label text="Ngày kết thúc nghỉ" />
                         </table:label>
                         <table:template>
-                            <Text 
-                            text="{
-                            path: 'table>EndDate',
-                            formatter: '.formatter.formatDate'
-                            }" />
+                            <Text
+                                text="{
+                                    path: 'table>EndDate',
+                                    formatter: '.formatter.formatDate'
+                                }"
+                            />
                         </table:template>
                     </table:Column>
 
-                    <table:Column id="Reason" sortProperty="Reason" filterProperty="Reason">
+                    <table:Column>
                         <table:label>
-                            <Label text="Lý do nghỉ" />
+                            <Label text="TimeSlot" />
+                        </table:label>
+                        <table:template>
+                            <Text text="{table>TimeSlot}" />
+                        </table:template>
+                    </table:Column>
+
+                    <table:Column>
+                        <table:label>
+                            <Label text="Lý do xin nghỉ" />
                         </table:label>
                         <table:template>
                             <Text text="{table>Reason}" />
                         </table:template>
                     </table:Column>
 
-
-                    <table:Column id="Status" sortProperty="Status" filterProperty="Status">
+                    <table:Column>
                         <table:label>
                             <Label text="Trạng thái" />
                         </table:label>
                         <table:template>
-                            <ObjectStatus 
-                            text="{path: 'table>Status', formatter: '.formatStatusText'}"
+                            <ObjectStatus
+                                text="{path: 'table>Status', formatter: '.formatStatusText'}"
                                 state="{path: 'table>Status', formatter: '.formatStatusState'}"
-                                inverted="true" />
+                                inverted="true"
+                            />
                         </table:template>
                     </table:Column>
                 </table:columns>
@@ -272,6 +259,5 @@
                 </table:rowActionTemplate>
             </table:Table>
         </f:content>
-        <f:footer />
     </f:DynamicPage>
 </mvc:View>

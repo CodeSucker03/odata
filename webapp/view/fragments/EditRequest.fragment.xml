@@ -85,31 +85,33 @@
                     rows="3"
                     growingMaxLines="3"
                     value="{form>Reason}"
-                     change=".onChangeValue"
+                    change=".onChangeValue"
                     fieldGroupIds="FormField"
                 />
             </form:SimpleForm>
         </content>
         <footer>
-          <Toolbar >
-             <Button id="messagePopoverBtnEdit"
-					visible="{=!!${message>/}.length}"
-					icon="{ path: '/', formatter: '.buttonIconFormatter' }"
-					type="{ path: '/', formatter: '.buttonTypeFormatter' }"
-					text= "{path: '/', formatter: '.highestSeverityMessages' }"
-					press=".handleMessagePopoverPress"
-					ariaHasPopup="Dialog"/>
-			<ToolbarSpacer/>
-            <Button
-                text="Submit"
-                type="Emphasized"
-                press=".onSubmitEditRequest"
-            />
-            <Button
-                text="Cancel"
-                press=".onCloseEditRequest"
-            />
-             </Toolbar>
+            <Toolbar>
+                <Button
+                    id="messagePopoverBtnEdit"
+                    visible="{=!!${message>/}.length}"
+                    icon="{ path: '/', formatter: '.buttonIconFormatter' }"
+                    type="{ path: '/', formatter: '.buttonTypeFormatter' }"
+                    text="{path: '/', formatter: '.highestSeverityMessages' }"
+                    press=".handleMessagePopoverPress"
+                    ariaHasPopup="Dialog"
+                />
+                <ToolbarSpacer />
+                <Button
+                    text="Submit"
+                    type="Emphasized"
+                    press=".onSubmitEditRequest"
+                />
+                <Button
+                    text="Cancel"
+                    press=".onCloseEditRequest"
+                />
+            </Toolbar>
         </footer>
     </Dialog>
 </core:FragmentDefinition>

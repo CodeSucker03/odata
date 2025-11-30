@@ -91,27 +91,27 @@
             </form:SimpleForm>
         </content>
         <footer>
-          <Toolbar >
-             <Button id="messagePopoverBtn"
-					visible="{=!!${message>/}.length}"
-					icon="{ path: '/', formatter: '.buttonIconFormatter' }"
-					type="{ path: '/', formatter: '.buttonTypeFormatter' }"
-					text= "{path: '/', formatter: '.highestSeverityMessages' }"
-					press=".handleMessagePopoverPress"
-					ariaHasPopup="Dialog"/>
-			<ToolbarSpacer/>
-             <Button
-                text="Submit"
-                type="Emphasized"
-                press="onSubmitCreateRequest"
-            />
-            <Button
-            text="Cancel"
-             press="onCloseCreateRequest"
-            />
-          
-          </Toolbar>
-    
+            <Toolbar>
+                <Button
+                    id="messagePopoverBtn"
+                    visible="{=!!${message>/}.length}"
+                    icon="{ path: '/', formatter: '.buttonIconFormatter' }"
+                    type="{ path: '/', formatter: '.buttonTypeFormatter' }"
+                    text="{path: '/', formatter: '.highestSeverityMessages' }"
+                    press=".handleMessagePopoverPress"
+                    ariaHasPopup="Dialog"
+                />
+                <ToolbarSpacer />
+                <Button
+                    text="Submit"
+                    type="Emphasized"
+                    press="onSubmitCreateRequest"
+                />
+                <Button
+                    text="Cancel"
+                    press="onCloseCreateRequest"
+                />
+            </Toolbar>
         </footer>
     </Dialog>
 </core:FragmentDefinition>

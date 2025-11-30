@@ -124,7 +124,7 @@ export default class Main extends Base {
     // MessagePopover Manager
     this.MessageManager = Messaging;
     this.setModel(this.MessageManager.getMessageModel(), "message");
-  
+
     // Router
     this.router.getRoute("RouteMain")?.attachMatched(this.onObjectMatched);
   }
@@ -240,60 +240,60 @@ export default class Main extends Base {
 
       const control = this.filterBar.determineControlByName(fieldName, groupName);
 
-    switch (true) {
-          case this.isControl<Input>(control, "sap.m.Input"): {
-            control.setValue(<string>fieldData);
-            break;
-          }
-
-          case this.isControl<TextArea>(control, "sap.m.TextArea"): {
-            control.setValue(<string>fieldData);
-            break;
-          }
-
-          case this.isControl<MultiInput>(control, "sap.m.MultiInput"): {
-            const tokens = (<string[]>fieldData).map((key) => new Token({ key, text: key }));
-            control.setTokens(tokens);
-            break;
-          }
-
-          case this.isControl<DatePicker>(control, "sap.m.DatePicker"): {
-            control.setValue(<string>fieldData);
-            break;
-          }
-
-          case this.isControl<TimePicker>(control, "sap.m.TimePicker"): {
-            control.setValue(<string>fieldData);
-            break;
-          }
-
-          case this.isControl<MultiComboBox>(control, "sap.m.MultiComboBox"): {
-            control.setSelectedKeys(<string[]>fieldData);
-            break;
-          }
-
-          case this.isControl<Select>(control, "sap.m.Select"): {
-            control.setSelectedKey(<string>fieldData);
-            break;
-          }
-
-          case this.isControl<ComboBox>(control, "sap.m.ComboBox"): {
-            control.setSelectedKey(<string>fieldData);
-            break;
-          }
-
-          case this.isControl<CheckBox>(control, "sap.m.CheckBox"): {
-            control.setSelected();
-            break;
-          }
-
-          case this.isControl<Switch>(control, "sap.m.Switch"): {
-            control.setState();
-            break;
-          }
-          default:
-            break;
+      switch (true) {
+        case this.isControl<Input>(control, "sap.m.Input"): {
+          control.setValue(<string>fieldData);
+          break;
         }
+
+        case this.isControl<TextArea>(control, "sap.m.TextArea"): {
+          control.setValue(<string>fieldData);
+          break;
+        }
+
+        case this.isControl<MultiInput>(control, "sap.m.MultiInput"): {
+          const tokens = (<string[]>fieldData).map((key) => new Token({ key, text: key }));
+          control.setTokens(tokens);
+          break;
+        }
+
+        case this.isControl<DatePicker>(control, "sap.m.DatePicker"): {
+          control.setValue(<string>fieldData);
+          break;
+        }
+
+        case this.isControl<TimePicker>(control, "sap.m.TimePicker"): {
+          control.setValue(<string>fieldData);
+          break;
+        }
+
+        case this.isControl<MultiComboBox>(control, "sap.m.MultiComboBox"): {
+          control.setSelectedKeys(<string[]>fieldData);
+          break;
+        }
+
+        case this.isControl<Select>(control, "sap.m.Select"): {
+          control.setSelectedKey(<string>fieldData);
+          break;
+        }
+
+        case this.isControl<ComboBox>(control, "sap.m.ComboBox"): {
+          control.setSelectedKey(<string>fieldData);
+          break;
+        }
+
+        case this.isControl<CheckBox>(control, "sap.m.CheckBox"): {
+          control.setSelected();
+          break;
+        }
+
+        case this.isControl<Switch>(control, "sap.m.Switch"): {
+          control.setState();
+          break;
+        }
+        default:
+          break;
+      }
     });
   };
 
@@ -415,7 +415,7 @@ export default class Main extends Base {
     this.expandedLabel.setText(expandedLabel);
     this.snappedLabel.setText(snappedLabel);
 
-    // this.table.setShowOverlay(true);
+    this.table.setShowOverlay(true);
   }
 
   public getFilters() {
@@ -472,6 +472,7 @@ export default class Main extends Base {
     const filters = this.getFilters();
 
     this.table.setBusy(true);
+
     oDataModel.read("/LeaveRequestSet", {
       filters,
       urlParameters: {},
@@ -487,6 +488,8 @@ export default class Main extends Base {
         console.error("OData read error:", error);
       },
     });
+
+    this.table.setShowOverlay(false);
   }
 
   private onRefresh() {
@@ -578,7 +581,6 @@ export default class Main extends Base {
       );
 
       this.createRequestDialog.open();
-
       // set active dialog
       this.currentActiveDialog = this.createRequestDialog;
     } catch (error) {
@@ -588,16 +590,17 @@ export default class Main extends Base {
 
   public onCloseCreateRequest() {
     this.createRequestDialog?.close();
-    this.resetValidate(this.createRequestDialog);
-
-    // Reset active dialog
-    this.currentActiveDialog = null;
   }
 
   public onAfterCloseCreateRequest(event: Dialog$AfterCloseEvent) {
     const dialog = event.getSource();
 
+    this.resetValidate(dialog);
+
     dialog.setModel(null, "form");
+
+    // Reset active dialog
+    this.currentActiveDialog = null;
   }
 
   public onSubmitCreateRequest(event: Button$PressEvent) {
@@ -612,25 +615,23 @@ export default class Main extends Base {
     const { LeaveType, StartDate, EndDate, Reason, TimeSlot } = formData;
 
     const PopoverBtn = this.getControlById<Button>("messagePopoverBtn");
-    
-    // #region Attach Listener for Change in Message 
-    this.MessagePopover.getBinding("items")?.attachChange(() =>{
-				this.MessagePopover?.navigateBack();
-				PopoverBtn.setType(this.buttonTypeFormatter());
-				PopoverBtn.setIcon(this.buttonIconFormatter());
-				PopoverBtn.setText(this.highestSeverityMessages());
-		});
-    
+
+    // #region Attach Listener for Change in Message
+    this.MessagePopover.getBinding("items")?.attachChange(() => {
+      this.MessagePopover?.navigateBack();
+      PopoverBtn.setType(this.buttonTypeFormatter());
+      PopoverBtn.setIcon(this.buttonIconFormatter());
+      PopoverBtn.setText(this.highestSeverityMessages());
+    });
 
     // Validate with passed dialog
     const isValid = this.onValidateBeforeSubmit(this.createRequestDialog);
-
     if (!isValid) {
       return;
     }
 
-
     dialog.setBusy(true);
+
     oDataModel.create(
       "/LeaveRequestSet",
       {
@@ -671,7 +672,6 @@ export default class Main extends Base {
         this.MessageManager.registerObject(this.editRequestDialog, true);
 
         this.editRequestDialog.addDependent(this.MessagePopover);
-
       }
       // Clear old messages
       this.MessageManager.removeAllMessages();
@@ -679,7 +679,6 @@ export default class Main extends Base {
       // Get selected index from table
       const indices = this.table.getSelectedIndices();
       const SelectedItem = <LeaveRequestForm>this.table.getContextByIndex(indices[0])?.getObject();
-
 
       const form = {
         ...SelectedItem,
@@ -691,19 +690,26 @@ export default class Main extends Base {
       this.editRequestDialog.setModel(new JSONModel(form), "form");
 
       this.editRequestDialog.open();
-         // set active dialog
+      // set active dialog
       this.currentActiveDialog = this.editRequestDialog;
     } catch (error) {
       console.log(error);
     }
   }
 
+  public onAfterCloseEditRequest(event: Dialog$AfterCloseEvent) {
+    const dialog = event.getSource();
+
+    this.resetValidate(dialog);
+
+    // Reset active dialog
+    this.currentActiveDialog = null;
+
+    dialog.setModel(null, "form");
+  }
+
   public onCloseEditRequest() {
     this.editRequestDialog?.close();
-    this.resetValidate(this.editRequestDialog);
-
-     // Reset active dialog
-    this.currentActiveDialog = null;
   }
 
   public onSubmitEditRequest(event: Button$PressEvent) {
@@ -725,14 +731,14 @@ export default class Main extends Base {
     const { LeaveType, StartDate, EndDate, Reason, TimeSlot } = formData;
 
     const PopoverBtn = this.getControlById<Button>("messagePopoverBtnEdit");
-    
-    // #region Attach Listener for Change in Message 
-    this.MessagePopover.getBinding("items")?.attachChange(() =>{
-				this.MessagePopover?.navigateBack();
-				PopoverBtn.setType(this.buttonTypeFormatter());
-				PopoverBtn.setIcon(this.buttonIconFormatter());
-				PopoverBtn.setText(this.highestSeverityMessages());
-		});
+
+    // #region Attach Listener for Change in Message
+    this.MessagePopover.getBinding("items")?.attachChange(() => {
+      this.MessagePopover?.navigateBack();
+      PopoverBtn.setType(this.buttonTypeFormatter());
+      PopoverBtn.setIcon(this.buttonIconFormatter());
+      PopoverBtn.setText(this.highestSeverityMessages());
+    });
 
     // Validate with passed dialog
     const isValid = this.onValidateBeforeSubmit(this.editRequestDialog);
@@ -742,7 +748,7 @@ export default class Main extends Base {
     }
 
     dialog.setBusy(true);
-    
+
     oDataModel.update(
       key,
       {
@@ -772,10 +778,6 @@ export default class Main extends Base {
     );
   }
 
-  public onAfterCloseEditRequest(event: Dialog$AfterCloseEvent) {
-    const dialog = event.getSource();
-    dialog.setModel(null, "form");
-  }
   // #endregion Edit
 
   // #region Delete
@@ -817,16 +819,15 @@ export default class Main extends Base {
   // #endregion Event handlers
 
   // #region Validation
-  
+
   // On change Input Value
   public onChangeValue(event: Event) {
     try {
       const control = event.getSource<InputBase>();
-      
+
       if (control.getVisible()) {
         this.validateControl(control);
       }
-
     } catch (error) {
       console.log(error);
     }
@@ -909,16 +910,12 @@ export default class Main extends Base {
         value = control.getValue();
 
         if (!value && control.getRequired()) {
-
           requiredError = true;
         } else if (value && !control.isValidValue()) {
-
           outOfRangeError = true;
         } else if (this.checkPastDateError(control)) {
-
           pastDateError = true;
         } else {
-
           // Bổ sung kiểm tra ngày hợp lệ nếu cần
           dateRangeError = this.checkdateRangeError(control.getFieldGroupIds()[0]);
         }
@@ -931,10 +928,8 @@ export default class Main extends Base {
         const input = control.getValue().trim();
 
         if (!value && input) {
-
           outOfRangeError = true;
         } else if (!value && control.getRequired()) {
-
           requiredError = true;
         }
 
@@ -989,7 +984,7 @@ export default class Main extends Base {
 
     // Add message to Message Manager Popover
     this.addMessageToManager(control, "form", message, severity);
-      
+
     // Set text and state directly on control ui
     control.setValueState(severity);
     control.setValueStateText?.(message);
@@ -1076,16 +1071,21 @@ export default class Main extends Base {
 
   // #region Message Popover
 
-  public handleMessagePopoverPress(event : Button$PressEvent){
+  public handleMessagePopoverPress(event: Button$PressEvent) {
     if (!this.MessagePopover) {
-     this.createMessagePopover(); 
+      this.createMessagePopover();
     }
 
     this.MessagePopover.toggle(event.getSource());
   }
 
-  // Add Message to Message Manager 
-  private addMessageToManager(control: InputBase, modelName : string, message : string, severity : keyof typeof ValueState) {
+  // Add Message to Message Manager
+  private addMessageToManager(
+    control: InputBase,
+    modelName: string,
+    message: string,
+    severity: keyof typeof ValueState
+  ) {
     // Get Binding Path of control
     const Target = this.getTargetPath(control, modelName);
 
@@ -1093,23 +1093,22 @@ export default class Main extends Base {
     this.removeMessageFromTarget(Target);
 
     // Add message to Message Manager Popover IF severity !== "None" to avoid adding emty message
-    if (severity !== "None" ) {
-       this.MessageManager.addMessages(
-					new Message({
-						message: message,
-						type: severity,
-						additionalText: this.getLabelText(control),
-						target: Target,
-						processor: this.currentActiveDialog?.getModel(modelName)
-					})
-		   );
+    if (severity !== "None") {
+      this.MessageManager.addMessages(
+        new Message({
+          message: message,
+          type: severity,
+          additionalText: this.getLabelText(control),
+          target: Target,
+          processor: this.currentActiveDialog?.getModel(modelName),
+        })
+      );
     }
-    
   }
 
   // Get Label in A Form layout Given a InputBase Control
   private getLabelText(control: InputBase): string {
-  if (!control) return "";
+    if (!control) return "";
     const SimpleForm = control.getParent() as FormElement;
 
     const Label = (<Label>SimpleForm.getLabel()).getText();
@@ -1117,11 +1116,11 @@ export default class Main extends Base {
   }
 
   // Get Control Binding Path
-  private getTargetPath(control: Control, modelName : string): string {
+  private getTargetPath(control: Control, modelName: string): string {
     const context = control.getBindingContext(modelName);
     if (!context) return "";
 
-    let basePath = context.getPath();   // maybe "/", or "/form", or "/items/0"
+    let basePath = context.getPath(); // maybe "/", or "/form", or "/items/0"
     let propertyPath: string | undefined;
 
     // Determine binding property
@@ -1145,11 +1144,11 @@ export default class Main extends Base {
       return `/${propertyPath}`;
     }
 
-  // normal case → "/form/StartDate"
-  return `${basePath}/${propertyPath}`;
+    // normal case → "/form/StartDate"
+    return `${basePath}/${propertyPath}`;
   }
 
-  // #region Create MessagePopover 
+  // #region Create MessagePopover
   private createMessagePopover(): void {
     this.MessagePopover = new MessagePopover({
       activeTitlePress: (Event) => {
@@ -1174,11 +1173,10 @@ export default class Main extends Base {
           subtitle: "{message>additionalText}",
           groupName: {
             parts: [{ path: "message>controlIds" }],
-            // formatter: this.getGroupName.bind(this)
           },
           activeTitle: {
             parts: [{ path: "message>controlIds" }],
-            formatter: this.isPositionable.bind(this)
+            formatter: this.isPositionable.bind(this),
           },
           type: "{message>type}",
           description: "{message>message}",
@@ -1187,14 +1185,13 @@ export default class Main extends Base {
 
       groupItems: false,
     });
-    
   }
-   // #endregion Create MessagePopover 
+  // #endregion Create MessagePopover
 
-	private	isPositionable(ControlId : string) : boolean {
-			// Such a hook can be used by the application to determine if a control can be found/reached on the page and navigated to.
-			return ControlId ? true : true;
-	}
+  private isPositionable(ControlId: string): boolean {
+    // Such a hook can be used by the application to determine if a control can be found/reached on the page and navigated to.
+    return ControlId ? true : true;
+  }
 
   // Remove message from a control
   private removeMessageFromTarget(target: string): void {
@@ -1229,7 +1226,10 @@ export default class Main extends Base {
           HighestSeverity = HighestSeverity !== ButtonType.Negative ? ButtonType.Critical : HighestSeverity;
           break;
         case "Success":
-          HighestSeverity = HighestSeverity !== ButtonType.Negative && HighestSeverity !== ButtonType.Critical  ? ButtonType.Success : HighestSeverity;
+          HighestSeverity =
+            HighestSeverity !== ButtonType.Negative && HighestSeverity !== ButtonType.Critical
+              ? ButtonType.Success
+              : HighestSeverity;
           break;
         default:
           HighestSeverity = !HighestSeverity ? ButtonType.Neutral : HighestSeverity;
@@ -1242,7 +1242,7 @@ export default class Main extends Base {
 
   // Display the number of messages with the highest severity
   private highestSeverityMessages(): string {
-    let HighestSeverityIconType : ButtonType = this.buttonTypeFormatter();
+    let HighestSeverityIconType: ButtonType = this.buttonTypeFormatter();
 
     let HighestSeverityMessageType: MessageType = MessageType.None;
 
@@ -1263,14 +1263,14 @@ export default class Main extends Base {
         HighestSeverityMessageType = HighestSeverityMessageType ?? MessageType.None;
         break;
     }
-    
+
     // Retrieve All Current Message
     const messages = <Message[]>this.MessageManager.getMessageModel().getData() || [];
 
     console.log(messages);
 
     // Get the Highest number of Error in an Error Type
-    const count = messages.reduce((total : number, msg : Message) => {
+    const count = messages.reduce((total: number, msg: Message) => {
       return msg.getType() === HighestSeverityMessageType ? total + 1 : total;
     }, 0);
 
@@ -1278,7 +1278,7 @@ export default class Main extends Base {
   }
 
   // Set the button icon according to the message with the highest severity
-  private buttonIconFormatter() : string {
+  private buttonIconFormatter(): string {
     let sIcon: string = "";
 
     // Retrieve All Current Message
