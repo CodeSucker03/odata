@@ -11,7 +11,18 @@ import Model from "sap/ui/model/Model";
 import type ODataModel from "sap/ui/model/odata/v2/ODataModel";
 import ResourceModel from "sap/ui/model/resource/ResourceModel";
 import type Component from "../Component";
-
+import type { Dict } from "base/utils/DataTypes";
+import type { BindingContextInfoTarget, CompositeBindingInfo } from "base/types/control";
+import type Input from "sap/m/Input";
+import type TextArea from "sap/m/TextArea";
+import type MultiInput from "sap/m/MultiInput";
+import type DatePicker from "sap/m/DatePicker";
+import type Select from "sap/m/Select";
+import type TimePicker from "sap/m/TimePicker";
+import type ComboBox from "sap/m/ComboBox";
+import type MultiComboBox from "sap/m/MultiComboBox";
+import type PropertyBinding from "sap/ui/model/PropertyBinding";
+import type SimpleType from "sap/ui/model/SimpleType";
 
 const formControlTypes = [
   "sap.m.Input",
@@ -134,39 +145,108 @@ export default class Base extends Controller {
 
     void this.getRouter().getTargets()?.display(target);
   }
-  
-/**
-  * Get all form controls (Input, Select, DatePicker, etc.)
- * that belong to a specific FieldGroupId.
- *
- * - Searches inside the given container (or whole view if none).
- * - Filters only valid form controls (based on given types).
- * - Filters out invisible controls.
- *
- * @param props.groupId  One or more FieldGroupId values to match.
- * @param props.container Optional control to search inside.
- * @param props.types Optional allowed control types (defaults to all form controls).
- */
-protected getFormControlsByFieldGroup<T extends Control>(props: {
-  groupId: string | string[];
-  container?: Control;
-  types?: readonly FormControlType[];
-}) {
-  const { groupId, container, types = formControlTypes } = props;
 
-  // If no container specified then use the entire View
-  const _container = container ?? this.getView();
+  /**
+   * Get all form controls (Input, Select, DatePicker, etc.)
+   * that belong to a specific FieldGroupId.
+   *
+   * - Searches inside the given container (or whole view if none).
+   * - Filters only valid form controls (based on given types).
+   * - Filters out invisible controls.
+   *
+   * @param props.groupId  One or more FieldGroupId values to match.
+   * @param props.container Optional control to search inside.
+   * @param props.types Optional allowed control types (defaults to all form controls).
+   */
+  protected getFormControlsByFieldGroup<T extends Control>(props: {
+    groupId: string | string[];
+    container?: Control;
+    types?: readonly FormControlType[];
+  }) {
+    const { groupId, container, types = formControlTypes } = props;
 
-  if (!_container) return [];
+    // If no container specified then use the entire View
+    const _container = container ?? this.getView();
 
-  return _container.getControlsByFieldGroupId(groupId).filter((control) => {
-    
-     // Check if control is one of the allowed types
-      const isFormControl = types.some(type => this.isControl(control, type));
+    if (!_container) return [];
+
+    return _container.getControlsByFieldGroupId(groupId).filter((control) => {
+      // Check if control is one of the allowed types
+      const isFormControl = types.some((type) => this.isControl(control, type));
 
       const isVisible = control.getVisible();
 
       return isFormControl && isVisible;
     }) as T[];
- }
+  }
+
+  protected getBindingContextInfo<C extends Control, T extends Dict = Dict>(source: C) {
+    let bindingInfo = <CompositeBindingInfo>{
+      parts: [],
+    };
+
+    switch (true) {
+      case this.isControl<Input>(source, "sap.m.Input"):
+      case this.isControl<TextArea>(source, "sap.m.TextArea"): {
+        bindingInfo = source.getBindingInfo("value");
+
+        break;
+      }
+      case this.isControl<MultiInput>(source, "sap.m.MultiInput"): {
+        bindingInfo = source.getBindingInfo("tokens");
+
+        break;
+      }
+      case this.isControl<DatePicker>(source, "sap.m.DatePicker"):
+      case this.isControl<TimePicker>(source, "sap.m.TimePicker"): {
+        bindingInfo = source.getBindingInfo("value");
+
+        break;
+      }
+      case this.isControl<Select>(source, "sap.m.Select"):
+      case this.isControl<ComboBox>(source, "sap.m.ComboBox"): {
+        bindingInfo = source.getBindingInfo("selectedKey");
+
+        break;
+      }
+      case this.isControl<MultiComboBox>(source, "sap.m.MultiComboBox"): {
+        bindingInfo = source.getBindingInfo("selectedKeys");
+
+        break;
+      }
+    }
+
+    bindingInfo = bindingInfo || {
+      parts: [],
+    };
+
+    const binding = bindingInfo.binding;
+    const context = binding?.getContext();
+    const model = <JSONModel>context?.getModel();
+    const path = bindingInfo.parts?.[0]?.path || "";
+    const modelName = bindingInfo.parts?.[0]?.model || "";
+
+    const tooltipBinding = <PropertyBinding>source.getBinding("tooltip");
+
+    const value: BindingContextInfoTarget<C, T> = {
+      name: binding?.getPath() ?? path ?? "", // Property name (alt: getBindingPath)
+      path: context?.getPath() ?? "", // Value binding path
+      processor: context?.getModel(), // Binding model
+      bindingType: <SimpleType>binding?.getType?.(), // Input data type,
+      data: context?.getObject() as T, // Binding object value
+      binding,
+      model,
+      modelName,
+      label: <string>tooltipBinding?.getValue() || source.getTooltip_Text() || "",
+      control: source,
+      get target() {
+        const path = this.path;
+        const name = this.name;
+
+        return `${path}${path === "/" ? "" : "/"}${name}`;
+      },
+    };
+
+    return value;
+  }
 }

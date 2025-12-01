@@ -51,15 +51,14 @@ import type FormElement from "sap/ui/layout/form/FormElement";
 import Button from "sap/m/Button";
 import type CheckBox from "sap/m/CheckBox";
 import type Switch from "sap/m/Switch";
+import DateTime from "base/utils/DateTime";
 
 /**
  * @namespace base.controller
  */
 export default class Main extends Base {
-  private view: View;
   private router: Router;
   private table: Table;
-  private layout: DynamicPage;
 
   // Filters
   private svm: SmartVariantManagement;
@@ -71,17 +70,14 @@ export default class Main extends Base {
   private createRequestDialog: Dialog;
   private editRequestDialog: Dialog;
   private currentActiveDialog: Dialog | null;
-  private currentPopoverButton: Button | null;
 
   // MessagePopover Manager
   private MessageManager: Messaging;
   private MessagePopover: MessagePopover;
 
   public override onInit(): void {
-    this.view = <View>this.getView();
     this.router = this.getRouter();
     this.table = this.getControlById<Table>("table");
-    this.layout = this.getControlById<DynamicPage>("dynamicPage");
 
     this.setModel(
       new JSONModel({
@@ -595,7 +591,7 @@ export default class Main extends Base {
   public onAfterCloseCreateRequest(event: Dialog$AfterCloseEvent) {
     const dialog = event.getSource();
 
-    this.resetValidate(dialog);
+    this.clearErrorMessages(dialog);
 
     dialog.setModel(null, "form");
 
@@ -700,7 +696,7 @@ export default class Main extends Base {
   public onAfterCloseEditRequest(event: Dialog$AfterCloseEvent) {
     const dialog = event.getSource();
 
-    this.resetValidate(dialog);
+    this.clearErrorMessages(dialog);
 
     // Reset active dialog
     this.currentActiveDialog = null;
@@ -834,13 +830,16 @@ export default class Main extends Base {
   }
 
   // Function to reset validate state when change dialog
-  private resetValidate(container: Dialog) {
+  private clearErrorMessages(container: Dialog) {
     const controls = this.getFormControlsByFieldGroup<InputBase>({
       groupId: "FormField",
       container: container,
     });
     controls.forEach((control) => {
-      this.setMessageState(control, { message: "", severity: "None" });
+      this.setMessageState(control, {
+        message: "",
+        severity: "None",
+      });
     });
   }
 
@@ -897,6 +896,7 @@ export default class Main extends Base {
 
         break;
       }
+
       case this.isControl<TextArea>(control, "sap.m.TextArea"): {
         value = control.getValue().trim();
 
@@ -906,14 +906,16 @@ export default class Main extends Base {
 
         break;
       }
+
       case this.isControl<DatePicker>(control, "sap.m.DatePicker"): {
         value = control.getValue();
+        const valueAsDate = control.getDateValue();
 
         if (!value && control.getRequired()) {
           requiredError = true;
         } else if (value && !control.isValidValue()) {
           outOfRangeError = true;
-        } else if (this.checkPastDateError(control)) {
+        } else if (!DateTime.IsSameOrAfter(valueAsDate, new Date())) {
           pastDateError = true;
         } else {
           // Bổ sung kiểm tra ngày hợp lệ nếu cần
@@ -922,6 +924,7 @@ export default class Main extends Base {
 
         break;
       }
+
       case this.isControl<ComboBox>(control, "sap.m.ComboBox"): {
         value = control.getSelectedKey();
 
@@ -983,29 +986,15 @@ export default class Main extends Base {
     const { message, severity } = options;
 
     // Add message to Message Manager Popover
-    this.addMessageToManager(control, "form", message, severity);
+    this.addMessageToManager(control, message, severity);
 
     // Set text and state directly on control ui
     control.setValueState(severity);
     control.setValueStateText?.(message);
   }
 
-  // Fucntion to check past date Given DatePicker Control return true/false
-  private checkPastDateError(control: DatePicker) {
-    let PastDateError = false;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // normalize today
-
-    const pickedDate = control.getDateValue(); // returns JS Date object
-
-    if (pickedDate && pickedDate < today) {
-      PastDateError = true;
-    }
-    return PastDateError;
-  }
-
   // Function to compare two dates given a FieldGroupid and return true false
-  private checkdateRangeError(GroupId: string) {
+  private checkdateRangeError(GroupId: string): boolean {
     let dateRangeError = false;
 
     const controls = this.getFormControlsByFieldGroup<InputBase>({
@@ -1013,10 +1002,18 @@ export default class Main extends Base {
     });
 
     const startControl = <DatePicker>(
-      controls.find((c) => this.isControl<DatePicker>(c, "sap.m.DatePicker") && c.getName() === "StartDate")
+      controls.find(
+        (control) =>
+          this.isControl<DatePicker>(control, "sap.m.DatePicker") &&
+          control.getBinding("value")?.getPath() === "StartDate"
+      )
     );
     const endControl = <DatePicker>(
-      controls.find((c) => this.isControl<DatePicker>(c, "sap.m.DatePicker") && c.getName() === "EndDate")
+      controls.find(
+        (control) =>
+          this.isControl<DatePicker>(control, "sap.m.DatePicker") &&
+          control.getBinding("value")?.getPath() === "EndDate"
+      )
     );
 
     const datePickers = [startControl, endControl];
@@ -1024,7 +1021,7 @@ export default class Main extends Base {
     const startDate = startControl?.getDateValue();
     const endDate = endControl?.getDateValue();
 
-    if (startDate > endDate) {
+    if (!DateTime.IsSameOrAfter(endDate, startDate)) {
       dateRangeError = true;
 
       // Set controls state to error
@@ -1037,6 +1034,7 @@ export default class Main extends Base {
     } else {
       // clear controls state if valid
       datePickers.forEach((control) => {
+        // Only clear if the error is date range error avoid clear other errors
         if (
           control.getValueState() === "Error" &&
           control.getValueStateText() === "Start date must be before end date"
@@ -1052,7 +1050,7 @@ export default class Main extends Base {
     return dateRangeError;
   }
 
-  public onRadioSelectionChange(event: RadioButtonGroup$SelectEvent) {
+  public onRadioSelectionChange(event: RadioButtonGroup$SelectEvent): void {
     const control = event.getSource();
 
     const context = <Context>control.getBindingContext("form");
@@ -1071,7 +1069,7 @@ export default class Main extends Base {
 
   // #region Message Popover
 
-  public handleMessagePopoverPress(event: Button$PressEvent) {
+  public handleMessagePopoverPress(event: Button$PressEvent): void {
     if (!this.MessagePopover) {
       this.createMessagePopover();
     }
@@ -1080,17 +1078,11 @@ export default class Main extends Base {
   }
 
   // Add Message to Message Manager
-  private addMessageToManager(
-    control: InputBase,
-    modelName: string,
-    message: string,
-    severity: keyof typeof ValueState
-  ) {
-    // Get Binding Path of control
-    const Target = this.getTargetPath(control, modelName);
+  private addMessageToManager(control: InputBase, message: string, severity: keyof typeof ValueState) {
+    const BindingContextInfoTarget = this.getBindingContextInfo(control);
 
     // clear old message
-    this.removeMessageFromTarget(Target);
+    this.removeMessageFromTarget(BindingContextInfoTarget.target);
 
     // Add message to Message Manager Popover IF severity !== "None" to avoid adding emty message
     if (severity !== "None") {
@@ -1098,9 +1090,9 @@ export default class Main extends Base {
         new Message({
           message: message,
           type: severity,
-          additionalText: this.getLabelText(control),
-          target: Target,
-          processor: this.currentActiveDialog?.getModel(modelName),
+          additionalText: BindingContextInfoTarget.label,
+          target: BindingContextInfoTarget.target,
+          processor: BindingContextInfoTarget.processor,
         })
       );
     }

@@ -133,7 +133,7 @@
                             tooltip="Add"
                             type="Emphasized"
                             icon="sap-icon://add"
-                            press="onAdd"
+                            press=".onOpenCreateRequest"
                         />
                         <Button
                             id="btnEdit"
@@ -142,7 +142,7 @@
                             type="Emphasized"
                             icon="sap-icon://edit"
                             enabled="{= ${table>/selectedIndices}.length === 1 }"
-                            press="onEditRequest"
+                            press=".onOpenEditRequest"
                         />
                         <Button
                             id="btnDelete"

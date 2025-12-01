@@ -23,6 +23,7 @@
                     selectedKey="{form>LeaveType}"
                     change=".onChangeValue"
                     fieldGroupIds="FormField"
+                    tooltip="Loại phép"
                 >
                     <items>
                         <core:Item
@@ -44,6 +45,7 @@
                     value="{form>StartDate}"
                     change=".onChangeValue"
                     fieldGroupIds="FormField"
+                    tooltip="Từ ngày"
                 />
 
                 <Label
@@ -58,6 +60,7 @@
                     value="{form>EndDate}"
                     change=".onChangeValue"
                     fieldGroupIds="FormField"
+                    tooltip="Đến ngày"
                 />
 
                 <Label
@@ -70,6 +73,7 @@
                     selectedIndex="{form>TimeSlotIndex}"
                     select=".onRadioSelectionChange"
                     fieldGroupIds="FormField"
+                    tooltip="Thời gian nghỉ"
                 >
                     <buttons>
                         <RadioButton text="{master>FieldValue}" />
@@ -87,6 +91,7 @@
                     value="{form>Reason}"
                     change=".onChangeValue"
                     fieldGroupIds="FormField"
+                    tooltip="Lý do"
                 />
             </form:SimpleForm>
         </content>
