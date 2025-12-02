@@ -98,7 +98,7 @@
         <footer>
             <Toolbar>
                 <Button
-                    id="messagePopoverBtn"
+                    id="messagePopoverBtnCreate"
                     visible="{=!!${message>/}.length}"
                     icon="{ path: '/', formatter: '.buttonIconFormatter' }"
                     type="{ path: '/', formatter: '.buttonTypeFormatter' }"

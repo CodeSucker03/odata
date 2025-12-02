@@ -2,7 +2,6 @@ import type { FilterPayload } from "base/types/filter";
 import type { ODataError, ODataResponse } from "base/types/odata";
 import type { FieldValueHelpItem, LeaveRequestForm, LeaveRequestItem } from "base/types/pages/main";
 import { noop, sleep } from "base/utils/shared";
-import type DynamicPage from "sap/f/DynamicPage";
 import type { Button$PressEvent } from "sap/m/Button";
 import type ComboBox from "sap/m/ComboBox";
 import type DatePicker from "sap/m/DatePicker";
@@ -25,7 +24,6 @@ import type FilterGroupItem from "sap/ui/comp/filterbar/FilterGroupItem";
 import PersonalizableInfo from "sap/ui/comp/smartvariants/PersonalizableInfo";
 import type SmartVariantManagement from "sap/ui/comp/smartvariants/SmartVariantManagement";
 import { ValueState } from "sap/ui/core/library";
-import type View from "sap/ui/core/mvc/View";
 import type { Route$MatchedEvent } from "sap/ui/core/routing/Route";
 import type Router from "sap/ui/core/routing/Router";
 import type Context from "sap/ui/model/Context";
@@ -69,7 +67,7 @@ export default class Main extends Base {
   // Fragments
   private createRequestDialog: Dialog;
   private editRequestDialog: Dialog;
-  private currentActiveDialog: Dialog | null;
+  private currentActivePopoverBtn: Button;
 
   // MessagePopover Manager
   private MessageManager: Messaging;
@@ -233,7 +231,6 @@ export default class Main extends Base {
   private applyData = (data: unknown) => {
     (<FilterPayload[]>data).forEach((item) => {
       const { groupName, fieldName, fieldData } = item;
-
       const control = this.filterBar.determineControlByName(fieldName, groupName);
 
       switch (true) {
@@ -430,6 +427,7 @@ export default class Main extends Base {
 
           break;
         }
+
         case this.isControl<DatePicker>(control, "sap.m.DatePicker"):
         case this.isControl<TimePicker>(control, "sap.m.TimePicker"): {
           const value = control.getValue();
@@ -440,6 +438,7 @@ export default class Main extends Base {
 
           break;
         }
+
         case this.isControl<Select>(control, "sap.m.Select"):
         case this.isControl<ComboBox>(control, "sap.m.ComboBox"): {
           const value = control.getSelectedKey();
@@ -560,6 +559,8 @@ export default class Main extends Base {
 
         this.createRequestDialog.addDependent(this.MessagePopover);
       }
+      // Get PopoverBtn
+      this.currentActivePopoverBtn = this.getControlById("messagePopoverBtnCreate");
 
       // Clear old messages
       this.MessageManager.removeAllMessages();
@@ -577,8 +578,6 @@ export default class Main extends Base {
       );
 
       this.createRequestDialog.open();
-      // set active dialog
-      this.currentActiveDialog = this.createRequestDialog;
     } catch (error) {
       console.log(error);
     }
@@ -594,9 +593,6 @@ export default class Main extends Base {
     this.clearErrorMessages(dialog);
 
     dialog.setModel(null, "form");
-
-    // Reset active dialog
-    this.currentActiveDialog = null;
   }
 
   public onSubmitCreateRequest(event: Button$PressEvent) {
@@ -605,24 +601,19 @@ export default class Main extends Base {
 
     const formModel = <JSONModel>dialog.getModel("form");
     const formData = <LeaveRequestForm>formModel.getData();
+    const { LeaveType, StartDate, EndDate, Reason, TimeSlot } = formData;
 
     const oDataModel = this.getModel<ODataModel>();
 
-    const { LeaveType, StartDate, EndDate, Reason, TimeSlot } = formData;
-
-    const PopoverBtn = this.getControlById<Button>("messagePopoverBtn");
-
-    // #region Attach Listener for Change in Message
-    this.MessagePopover.getBinding("items")?.attachChange(() => {
-      this.MessagePopover?.navigateBack();
-      PopoverBtn.setType(this.buttonTypeFormatter());
-      PopoverBtn.setIcon(this.buttonIconFormatter());
-      PopoverBtn.setText(this.highestSeverityMessages());
-    });
+    // Change Popover Button State
+    this.changePopoverButtonState(this.currentActivePopoverBtn?.getId() || "");
 
     // Validate with passed dialog
     const isValid = this.onValidateBeforeSubmit(this.createRequestDialog);
     if (!isValid) {
+      setTimeout(() => {
+        this.MessagePopover.openBy(this.currentActivePopoverBtn);
+      }, 0);
       return;
     }
 
@@ -669,6 +660,10 @@ export default class Main extends Base {
 
         this.editRequestDialog.addDependent(this.MessagePopover);
       }
+
+      // Get PopoverBtn
+      this.currentActivePopoverBtn = this.getControlById("messagePopoverBtnEdit");
+
       // Clear old messages
       this.MessageManager.removeAllMessages();
 
@@ -686,8 +681,6 @@ export default class Main extends Base {
       this.editRequestDialog.setModel(new JSONModel(form), "form");
 
       this.editRequestDialog.open();
-      // set active dialog
-      this.currentActiveDialog = this.editRequestDialog;
     } catch (error) {
       console.log(error);
     }
@@ -697,9 +690,6 @@ export default class Main extends Base {
     const dialog = event.getSource();
 
     this.clearErrorMessages(dialog);
-
-    // Reset active dialog
-    this.currentActiveDialog = null;
 
     dialog.setModel(null, "form");
   }
@@ -714,27 +704,18 @@ export default class Main extends Base {
 
     const formModel = <JSONModel>dialog.getModel("form");
     const formData = <LeaveRequestForm>formModel.getData();
-
-    const oDataModel = this.getModel<ODataModel>();
+    const { LeaveType, StartDate, EndDate, Reason, TimeSlot } = formData;
 
     // Get selected index from table
     const indices = this.table.getSelectedIndices();
     const item = <LeaveRequestItem>this.table?.getContextByIndex(indices[0])?.getObject();
 
     // Create key to edit
+    const oDataModel = this.getModel<ODataModel>();
     const key = oDataModel.createKey("/LeaveRequestSet", item);
 
-    const { LeaveType, StartDate, EndDate, Reason, TimeSlot } = formData;
-
-    const PopoverBtn = this.getControlById<Button>("messagePopoverBtnEdit");
-
-    // #region Attach Listener for Change in Message
-    this.MessagePopover.getBinding("items")?.attachChange(() => {
-      this.MessagePopover?.navigateBack();
-      PopoverBtn.setType(this.buttonTypeFormatter());
-      PopoverBtn.setIcon(this.buttonIconFormatter());
-      PopoverBtn.setText(this.highestSeverityMessages());
-    });
+    // Change Popover Button State
+    this.changePopoverButtonState(this.currentActivePopoverBtn?.getId() || "");
 
     // Validate with passed dialog
     const isValid = this.onValidateBeforeSubmit(this.editRequestDialog);
@@ -824,6 +805,7 @@ export default class Main extends Base {
       if (control.getVisible()) {
         this.validateControl(control);
       }
+      this.changePopoverButtonState(this.currentActivePopoverBtn?.getId() || "");
     } catch (error) {
       console.log(error);
     }
@@ -1294,6 +1276,20 @@ export default class Main extends Base {
     });
 
     return sIcon;
+  }
+
+  // #region Attach Listener for Change in Message
+  private changePopoverButtonState(buttonId: string) {
+    const PopoverBtn = this.getControlById<Button>(buttonId);
+
+    this.MessagePopover.getBinding("items")?.attachChange(() => {
+      this.MessagePopover?.navigateBack();
+      PopoverBtn.setType(this.buttonTypeFormatter());
+      PopoverBtn.setIcon(this.buttonIconFormatter());
+      PopoverBtn.setText(this.highestSeverityMessages());
+    });
+
+    // #endregion Attach Listener for Change in Message
   }
 
   // #endregion Message Popover
