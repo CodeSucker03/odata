@@ -299,6 +299,7 @@ export default class Main extends Base {
         switch (true) {
           case this.isControl<Input>(control, "sap.m.Input"): {
             const value = control.getValue();
+
             if (value) {
               acc.push(item);
             }
@@ -307,6 +308,7 @@ export default class Main extends Base {
 
           case this.isControl<TextArea>(control, "sap.m.TextArea"): {
             const value = control.getValue();
+
             if (value) {
               acc.push(item);
             }
@@ -342,6 +344,7 @@ export default class Main extends Base {
 
           case this.isControl<MultiComboBox>(control, "sap.m.MultiComboBox"): {
             const keys = control.getSelectedKeys();
+
             if (keys.length) {
               acc.push(item);
             }
@@ -350,6 +353,7 @@ export default class Main extends Base {
 
           case this.isControl<Select>(control, "sap.m.Select"): {
             const key = control.getSelectedKey();
+
             if (key) {
               acc.push(item);
             }
@@ -358,6 +362,7 @@ export default class Main extends Base {
 
           case this.isControl<ComboBox>(control, "sap.m.ComboBox"): {
             const key = control.getSelectedKey();
+
             if (key) {
               acc.push(item);
             }
@@ -366,6 +371,7 @@ export default class Main extends Base {
 
           case this.isControl<CheckBox>(control, "sap.m.CheckBox"): {
             const value = control.getSelected().toString();
+
             if (value) {
               acc.push(item);
             }
@@ -374,6 +380,7 @@ export default class Main extends Base {
 
           case this.isControl<Switch>(control, "sap.m.Switch"): {
             const value = control.getState().toString();
+            
             if (value) {
               acc.push(item);
             }
@@ -721,6 +728,9 @@ export default class Main extends Base {
     const isValid = this.onValidateBeforeSubmit(this.editRequestDialog);
 
     if (!isValid) {
+      setTimeout(() => {
+        this.MessagePopover.openBy(this.currentActivePopoverBtn);
+      }, 0);
       return;
     }
 
