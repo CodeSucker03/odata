@@ -258,6 +258,9 @@
                     </table:RowAction>
                 </table:rowActionTemplate>
             </table:Table>
+
         </f:content>
+
+         
     </f:DynamicPage>
 </mvc:View>

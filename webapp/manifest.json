@@ -104,12 +104,23 @@
           "target": [
             "TargetMain"
           ]
+        },
+        {
+          "name": "Analytics",
+          "pattern": "analytics:?query:",
+          "target": [
+            "TargetAnalytics"
+          ]
         }
       ],
       "targets": {
         "TargetMain": {
           "id": "Main",
           "name": "Main"
+        },
+        "TargetAnalytics": {
+          "id": "Analytics",
+          "name": "Analytics"
         },
         "notFound": {
           "viewId": "notFound",

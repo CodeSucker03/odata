@@ -380,7 +380,7 @@ export default class Main extends Base {
 
           case this.isControl<Switch>(control, "sap.m.Switch"): {
             const value = control.getState().toString();
-            
+
             if (value) {
               acc.push(item);
             }
@@ -1426,4 +1426,11 @@ export default class Main extends Base {
       });
   }
   // #endregion Excel
+
+  // region Get Analytic Data
+  public onOpenAnalytics() {
+    this.getRouter().navTo("Analytics");
+}
+
+  // endregion Get Analytic Data
 }
