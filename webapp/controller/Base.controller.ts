@@ -11,7 +11,6 @@ import Model from "sap/ui/model/Model";
 import type ODataModel from "sap/ui/model/odata/v2/ODataModel";
 import ResourceModel from "sap/ui/model/resource/ResourceModel";
 import type Component from "../Component";
-import type { Dict } from "base/utils/DataTypes";
 import type { BindingContextInfoTarget, CompositeBindingInfo } from "base/types/control";
 import type Input from "sap/m/Input";
 import type TextArea from "sap/m/TextArea";
@@ -23,6 +22,9 @@ import type ComboBox from "sap/m/ComboBox";
 import type MultiComboBox from "sap/m/MultiComboBox";
 import type PropertyBinding from "sap/ui/model/PropertyBinding";
 import type SimpleType from "sap/ui/model/SimpleType";
+import type { Dict } from "base/types/utils";
+import Message from "sap/ui/core/message/Message";
+import { FieldEmail } from "base/utils/DataTypes";
 
 const formControlTypes = [
   "sap.m.Input",
@@ -41,7 +43,10 @@ type FormControlType = (typeof formControlTypes)[number];
  */
 export default class Base extends Controller {
   public formatter = Formatter;
-  public dataType = {};
+  public dataType = {
+    FieldEmail,
+  };
+
 
   protected getRouter() {
     return UIComponent.getRouterFor(this);
@@ -86,6 +91,11 @@ export default class Base extends Controller {
     return this.getResourceBundle().getText(i18nKey, placeholders) || i18nKey;
   }
 
+  protected addMessages(message: ConstructorParameters<typeof Message>[0]) {
+    this.getMessageManager().addMessages(new Message(message));
+  }
+
+
   protected getComponent() {
     return this.getOwnerComponent() as Component;
   }
@@ -101,6 +111,15 @@ export default class Base extends Controller {
   protected getMetadataLoaded() {
     return this.getComponentModel().metadataLoaded();
   }
+
+   protected getErrorHandler() {
+    //
+  }
+
+  protected getMessageManager() {
+    return this.getComponent().getMessageManager();
+  }
+
 
   protected attachControl(control: Control) {
     const view = <View>this.getView();

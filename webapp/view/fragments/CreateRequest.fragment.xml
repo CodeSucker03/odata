@@ -88,35 +88,28 @@
                     required="true"
                     rows="3"
                     growingMaxLines="3"
-                    value="{form>Reason}"
+                    value="{
+                        path: 'form>Reason',
+                        type: '.dataType.FieldEmail'
+                    }"
                     change=".onChangeValue"
                     fieldGroupIds="FormField"
                     tooltip="Lý do"
                 />
             </form:SimpleForm>
         </content>
-        <footer>
-            <Toolbar>
-                <Button
-                    id="messagePopoverBtnCreate"
-                    visible="{=!!${message>/}.length}"
-                    icon="{ path: '/', formatter: '.buttonIconFormatter' }"
-                    type="{ path: '/', formatter: '.buttonTypeFormatter' }"
-                    text="{path: '/', formatter: '.highestSeverityMessages' }"
-                    press=".handleMessagePopoverPress"
-                    ariaHasPopup="Dialog"
-                />
-                <ToolbarSpacer />
-                <Button
-                    text="Submit"
-                    type="Emphasized"
-                    press="onSubmitCreateRequest"
-                />
-                <Button
-                    text="Cancel"
-                    press="onCloseCreateRequest"
-                />
-            </Toolbar>
-        </footer>
+        <beginButton>
+            <Button
+                text="Submit"
+                type="Emphasized"
+                press="onSubmitCreateRequest"
+            />
+        </beginButton>
+        <endButton>
+            <Button
+                text="Cancel"
+                press="onCloseCreateRequest"
+            />
+        </endButton>
     </Dialog>
 </core:FragmentDefinition>

@@ -6,94 +6,78 @@
     xmlns:core="sap.ui.core"
     xmlns:layout="sap.ui.layout"
 >
-    <f:DynamicPage headerExpanded="true">
-        <f:title>
-            <f:DynamicPageTitle>
-                <f:heading>
-                    <Title
-                        text="Leave Dashboard"
-                        level="H1"
+    <VBox class="sapUiMediumMargin">
+        <HBox
+            alignItems="Center"
+            justifyContent="Start"
+            class="sapUiMediumMarginTop"
+            wrap="Wrap"
+            id="tileContainer"
+        >
+            <GenericTile
+                class="sapUiTinyMarginEnd tileLayout"
+                header="Tổng ngày nghỉ năm nay"
+            >
+                <TileContent footer="Tổng số ngày đã nghỉ">
+                    <NumericContent
+                        icon="sap-icon://calendar"
+                        value="{vm>/insights/totalLeaveDaysThisYear}"
+                        withMargin="false"
                     />
-                </f:heading>
-            </f:DynamicPageTitle>
-        </f:title>
+                </TileContent>
+            </GenericTile>
 
-        <f:header>
-            <f:DynamicPageHeader>
-                <VBox class="sapUiMediumMargin">
-                    <HBox
-                        alignItems="Center"
-                        justifyContent="Start"
-                        class="sapUiMediumMarginTop"
-                        wrap="Wrap"
-                    >
-                        <GenericTile
-                            class="sapUiTinyMarginEnd tileLayout"
-                            header="Tổng ngày nghỉ năm nay"
-                        >
-                            <TileContent footer="Tổng số ngày đã nghỉ">
-                                <NumericContent
-                                    icon="sap-icon://calendar"
-                                    value="{vm>/insights/totalLeaveDaysThisYear}"
-                                    withMargin="false"
-                                />
-                            </TileContent>
-                        </GenericTile>
+            <GenericTile
+                class="sapUiTinyMarginEnd tileLayout"
+                header="Nghỉ trong tháng này"
+            >
+                <TileContent footer="Số đơn nghỉ tháng này">
+                    <NumericContent
+                        icon="sap-icon://appointment-2"
+                        value="{vm>/insights/requestsThisMonth}"
+                        withMargin="false"
+                    />
+                </TileContent>
+            </GenericTile>
 
-                        <GenericTile
-                            class="sapUiTinyMarginEnd tileLayout"
-                            header="Nghỉ trong tháng này"
-                        >
-                            <TileContent footer="Số đơn nghỉ tháng này">
-                                <NumericContent
-                                    icon="sap-icon://appointment-2"
-                                    value="{vm>/insights/requestsThisMonth}"
-                                    withMargin="false"
-                                />
-                            </TileContent>
-                        </GenericTile>
+            <GenericTile
+                class="sapUiTinyMarginEnd tileLayout"
+                header="Đang chờ duyệt"
+            >
+                <TileContent footer="Số đơn đang chờ">
+                    <NumericContent
+                        icon="sap-icon://pending"
+                        value="{vm>/insights/pendingCount}"
+                        withMargin="false"
+                    />
+                </TileContent>
+            </GenericTile>
 
-                        <GenericTile
-                            class="sapUiTinyMarginEnd tileLayout"
-                            header="Đang chờ duyệt"
-                        >
-                            <TileContent footer="Số đơn đang chờ">
-                                <NumericContent
-                                    icon="sap-icon://pending"
-                                    value="{vm>/insights/pendingCount}"
-                                    withMargin="false"
-                                />
-                            </TileContent>
-                        </GenericTile>
+            <GenericTile
+                class="sapUiTinyMarginEnd tileLayout"
+                header="Đã duyệt"
+            >
+                <TileContent footer="Số đơn được duyệt">
+                    <NumericContent
+                        icon="sap-icon://accept"
+                        value="{vm>/insights/approvedCount}"
+                        withMargin="false"
+                    />
+                </TileContent>
+            </GenericTile>
 
-                        <GenericTile
-                            class="sapUiTinyMarginEnd tileLayout"
-                            header="Đã duyệt"
-                        >
-                            <TileContent footer="Số đơn được duyệt">
-                                <NumericContent
-                                    icon="sap-icon://accept"
-                                    value="{vm>/insights/approvedCount}"
-                                    withMargin="false"
-                                />
-                            </TileContent>
-                        </GenericTile>
-
-                        <GenericTile
-                            class="sapUiTinyMarginEnd tileLayout"
-                            header="Bị từ chối"
-                        >
-                            <TileContent footer="Số đơn bị từ chối">
-                                <NumericContent
-                                    icon="sap-icon://decline"
-                                    value="{vm>/insights/rejectedCount}"
-                                    withMargin="false"
-                                />
-                            </TileContent>
-                        </GenericTile>
-                    </HBox>
-                </VBox>
-            </f:DynamicPageHeader>
-        </f:header>
-    </f:DynamicPage>
+            <GenericTile
+                class="sapUiTinyMarginEnd tileLayout"
+                header="Bị từ chối"
+            >
+                <TileContent footer="Số đơn bị từ chối">
+                    <NumericContent
+                        icon="sap-icon://decline"
+                        value="{vm>/insights/rejectedCount}"
+                        withMargin="false"
+                    />
+                </TileContent>
+            </GenericTile>
+        </HBox>
+    </VBox>
 </mvc:View>

@@ -8,6 +8,10 @@ import Device from "sap/ui/Device";
 import JSONModel from "sap/ui/model/json/JSONModel";
 import { createDeviceModel } from "./model/models";
 import type { ComponentData, Dict } from "./types/utils";
+import Messaging from "sap/ui/core/Messaging";
+import type MessageProcessor from "sap/ui/core/message/MessageProcessor";
+import { ErrorHandler } from "./controller/ErrorHandler";
+import ControlMessageProcessor from "sap/ui/core/message/ControlMessageProcessor";
 
 /**
  * @namespace base
@@ -17,6 +21,10 @@ export default class Component extends BaseComponent {
     manifest: "json",
     interfaces: ["sap.ui.core.IAsyncContentCreation"],
   };
+
+  private MessageManager: Messaging;
+  private MessageProcessor: MessageProcessor;
+  private ErrorHandler: ErrorHandler;
 
   public override init(): void {
     // call the base component's init function
@@ -29,6 +37,15 @@ export default class Component extends BaseComponent {
       }),
       "global"
     );
+
+    // Message manager
+    this.MessageManager = Messaging;
+    this.MessageProcessor = new ControlMessageProcessor();
+    this.MessageManager.registerMessageProcessor(this.MessageProcessor);
+
+    this.ErrorHandler = new ErrorHandler(this);
+
+    this.setModel(this.MessageManager.getMessageModel(), "message");
 
     // set the device model
     this.setModel(createDeviceModel(), "device");
@@ -59,6 +76,10 @@ export default class Component extends BaseComponent {
 
   public getAppID() {
     return <string>this.getManifestEntry("/sap.app/id");
+  }
+
+  public getMessageManager() {
+    return this.MessageManager;
   }
 
   public getContentDensityClass(): string {

@@ -8,7 +8,10 @@
     xmlns:svm="sap.ui.comp.smartvariants"
     xmlns:fb="sap.ui.comp.filterbar"
 >
-    <f:DynamicPage headerExpanded="true">
+    <f:DynamicPage
+        headerExpanded="true"
+        showFooter="true"
+    >
         <f:title>
             <f:DynamicPageTitle>
                 <f:heading>
@@ -159,6 +162,11 @@
                             tooltip="Export to Excel"
                             press="onExportExcel"
                         />
+                        <Button
+                            press=".onOpenAnalytics"
+                            icon="sap-icon://bar-chart"
+                            tooltip="Analytics"
+                        />
                     </OverflowToolbar>
                 </table:extension>
                 <table:noData>
@@ -189,7 +197,12 @@
                             <Label text="Loại phép" />
                         </table:label>
                         <table:template>
-                            <Text text="{table>LeaveType}" />
+                            <Text
+                                text="{
+                                    path: 'table>LeaveType',
+                                    formatter: '.formatLeaveType'
+                            }"
+                            />
                         </table:template>
                     </table:Column>
 
@@ -226,7 +239,12 @@
                             <Label text="TimeSlot" />
                         </table:label>
                         <table:template>
-                            <Text text="{table>TimeSlot}" />
+                            <Text
+                                text="{
+                                    path: 'table>TimeSlot',
+                                    formatter: '.formatTimeSlot'
+                                }"
+                            />
                         </table:template>
                     </table:Column>
 
@@ -245,8 +263,14 @@
                         </table:label>
                         <table:template>
                             <ObjectStatus
-                                text="{path: 'table>Status', formatter: '.formatStatusText'}"
-                                state="{path: 'table>Status', formatter: '.formatStatusState'}"
+                                text="{
+                                    path: 'table>Status',
+                                    formatter: '.formatStatusText'
+                                }"
+                                state="{
+                                    path: 'table>Status',
+                                    formatter: '.formatStatusState'
+                                }"
                                 inverted="true"
                             />
                         </table:template>
@@ -258,9 +282,9 @@
                     </table:RowAction>
                 </table:rowActionTemplate>
             </table:Table>
-
         </f:content>
-
-         
+        <f:footer>
+            <OverflowToolbar id="footer" />
+        </f:footer>
     </f:DynamicPage>
 </mvc:View>
