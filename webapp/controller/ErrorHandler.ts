@@ -19,6 +19,8 @@ export class ErrorHandler {
     // Model
     this.model = <ODataModel>this.component.getModel();
 
+    console.log(this.model);
+
     // Handlers
     this.model.attachMetadataFailed(this.requestMetadataFailedHandler);
     this.model.attachRequestFailed(this.requestFailedHandler);

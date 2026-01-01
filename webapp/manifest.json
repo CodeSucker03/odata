@@ -82,46 +82,46 @@
         }
       ]
     },
-    "routing": {
-      "config": {
-        "routerClass": "sap.m.routing.Router",
-        "controlAggregation": "pages",
-        "controlId": "app",
-        "transition": "slide",
-        "type": "View",
-        "viewType": "XML",
-        "path": "base.view",
-        "async": true,
-        "viewPath": "base.view",
-        "bypassed": {
-          "target": "notFound"
-        }
-      },
-      "routes": [
-        {
-          "name": "RouteMain",
-          "pattern": ":?query:",
-          "target": [
-            "TargetMain"
-          ]
+      "routing": {
+        "config": {
+          "routerClass": "sap.m.routing.Router",
+          "controlAggregation": "pages",
+          "controlId": "app",
+          "transition": "slide",
+          "type": "View",
+          "viewType": "XML",
+          "path": "base.view",
+          "async": true,
+          "viewPath": "base.view",
+          "bypassed": {
+            "target": "notFound"
+          }
         },
-        {
-          "name": "Analytics",
-          "pattern": "analytics:?query:",
-          "target": [
-            "TargetAnalytics"
-          ]
-        }
-      ],
-      "targets": {
-        "TargetMain": {
-          "id": "Main",
-          "name": "Main"
-        },
-        "TargetAnalytics": {
-          "id": "Analytics",
-          "name": "Analytics"
-        },
+        "routes": [
+          {
+            "name": "RouteMain",
+            "pattern": ":?query:",
+            "target": [
+              "TargetMain"
+            ]
+          },
+          {
+            "name": "Analytics",
+            "pattern": "analytics:?query:",
+            "target": [
+              "TargetAnalytics"
+            ]
+          }
+        ],
+        "targets": {
+          "TargetMain": {
+            "id": "Main",
+            "name": "Main"
+          },
+          "TargetAnalytics": {
+            "id": "Analytics",
+            "name": "Analytics"
+          },
         "notFound": {
           "viewId": "notFound",
           "viewName": "NotFound",

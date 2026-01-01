@@ -47,7 +47,6 @@ export default class Base extends Controller {
     FieldEmail,
   };
 
-
   protected getRouter() {
     return UIComponent.getRouterFor(this);
   }
@@ -91,11 +90,6 @@ export default class Base extends Controller {
     return this.getResourceBundle().getText(i18nKey, placeholders) || i18nKey;
   }
 
-  protected addMessages(message: ConstructorParameters<typeof Message>[0]) {
-    this.getMessageManager().addMessages(new Message(message));
-  }
-
-
   protected getComponent() {
     return this.getOwnerComponent() as Component;
   }
@@ -112,7 +106,7 @@ export default class Base extends Controller {
     return this.getComponentModel().metadataLoaded();
   }
 
-   protected getErrorHandler() {
+  protected getErrorHandler() {
     //
   }
 
@@ -120,6 +114,9 @@ export default class Base extends Controller {
     return this.getComponent().getMessageManager();
   }
 
+  protected addMessages(message: ConstructorParameters<typeof Message>[0]) {
+    this.getMessageManager().addMessages(new Message(message));
+  }
 
   protected attachControl(control: Control) {
     const view = <View>this.getView();
