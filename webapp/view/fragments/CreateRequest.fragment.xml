@@ -89,7 +89,8 @@
                     rows="3"
                     growingMaxLines="3"
                     value="{form>Reason}"
-                    change=".onChangeValue"
+                    change=".onChang
+                    eValue"
                     fieldGroupIds="FormField"
                     tooltip="Lý do"
                 />
