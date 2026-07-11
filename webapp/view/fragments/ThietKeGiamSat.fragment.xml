@@ -1,0 +1,125 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns:core="sap.ui.core"
+    xmlns:u="sap.ui.unified"
+    xmlns:f="sap.ui.layout.form"
+    xmlns:uxap="sap.uxap"
+>
+    <VBox
+        width="100%"
+    >
+        <f:SimpleForm
+            editable="true"
+            layout="ResponsiveGridLayout"
+            width="90%"
+            labelSpanXL="3"
+            labelSpanL="4"
+            labelSpanM="4"
+            labelSpanS="12"
+            columnsXL="1"
+            columnsL="1"
+            columnsM="1"
+            singleContainerFullSize="true"
+            class="formFieldGaps"
+        >
+            <f:content>
+                <Label
+                    text="CB phụ trách TKDD"
+                    required="true"
+                />
+                <Select
+                    selectedKey="{assignData>/tkdd/selectedKey}"
+                    items="{staffPool>/tkdd}"
+                >
+                    <core:Item
+                        key="{staffPool>id}"
+                        text="{staffPool>name} (Đang xử lý: {staffPool>currentLoads} dự án)"
+                    />
+                </Select>
+                <HBox
+                    visible="{= ${assignData>/tkdd/selectedKey} === 'KHAC' }"
+                    class="sapUiTinyMarginTop"
+                >
+                    <Input
+                        placeholder="Mã nhân viên"
+                        value="{assignData>/tkdd/manualId}"
+                    />
+                    <Input
+                        placeholder="Họ và tên"
+                        value="{assignData>/tkdd/manualName}"
+                    />
+                    <Input
+                        placeholder="Email"
+                        value="{assignData>/tkdd/manualEmail}"
+                        type="Email"
+                    />
+                </HBox>
+
+                <Label
+                    text="CB phụ trách Giám sát"
+                    required="true"
+                />
+                <Select
+                    selectedKey="{assignData>/giamsat/selectedKey}"
+                    items="{staffPool>/xdcb}"
+                >
+                    <core:Item
+                        key="{staffPool>id}"
+                        text="{staffPool>name} (Đang xử lý: {staffPool>currentLoads} dự án)"
+                    />
+                </Select>
+                <HBox
+                    visible="{= ${assignData>/giamsat/selectedKey} === 'KHAC' }"
+                    class="sapUiTinyMarginTop"
+                >
+                    <Input
+                        placeholder="Mã nhân viên"
+                        value="{assignData>/giamsat/manualId}"
+                    />
+                    <Input
+                        placeholder="Họ và tên"
+                        value="{assignData>/giamsat/manualName}"
+                    />
+                    <Input
+                        placeholder="Email"
+                        value="{assignData>/giamsat/manualEmail}"
+                        type="Email"
+                    />
+                </HBox>
+
+                <Label
+                    text="CB phụ trách Thiết kế Kiến trúc"
+                    required="true"
+                />
+                <Select
+                    selectedKey="{assignData>/kienTruc/selectedKey}"
+                    items="{staffPool>/xdcb}"
+                >
+                    <core:Item
+                        key="{staffPool>id}"
+                        text="{staffPool>name} (Đang xử lý: {staffPool>currentLoads} dự án)"
+                    />
+                </Select>
+                <HBox
+                    visible="{= ${assignData>/kienTruc/selectedKey} === 'KHAC' }"
+                    class="sapUiTinyMarginTop"
+                >
+                    <Input
+                        placeholder="Mã nhân viên"
+                        value="{assignData>/kienTruc/manualId}"
+                    />
+                    <Input
+                        placeholder="Họ và tên"
+                        value="{assignData>/kienTruc/manualName}"
+                    />
+                    <Input
+                        placeholder="Email"
+                        value="{assignData>/kienTruc/manualEmail}"
+                        type="Email"
+                    />
+                </HBox>
+            </f:content>
+        </f:SimpleForm>
+    </VBox>
+</core:FragmentDefinition>

@@ -1,0 +1,67 @@
+<core:FragmentDefinition
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:f="sap.ui.layout.form"
+    xmlns:core="sap.ui.core"
+    xmlns:u="sap.ui.unified"
+    xmlns:uxap="sap.uxap"
+>
+    <VBox>
+        <f:SimpleForm
+            id="formContractor"
+            editable="true"
+            layout="ResponsiveGridLayout"
+            labelSpanXL="3"
+            labelSpanL="3"
+            labelSpanM="4"
+            labelSpanS="12"
+            columnsXL="1"
+            columnsL="1"
+            columnsM="1"
+            singleContainerFullSize="true"
+            width="70%"
+        >
+            <f:content>
+                <Label
+                    text="Nhà thầu thực hiện xây dựng"
+                    required="true"
+                />
+                <Input
+                    id="ipNhaThauXayDung"
+                    placeholder="Nhập tên nhà thầu xây dựng..."
+                    value="{projectInitForm>/ConstructionContractor}"
+                />
+
+                <Label
+                    text="Nhà thầu thực hiện điều hòa"
+                    required="true"
+                />
+                <Input
+                    id="ipNhaThauDieuHoa"
+                    placeholder="Nhập tên nhà thầu điều hòa..."
+                    value="{projectInitForm>/AirConditioningContractor}"
+                />
+
+                <Label
+                    text="Nhà thầu thực hiện camera điện mạng"
+                    required="true"
+                />
+                <Input
+                    id="ipNhaThauDienMang"
+                    placeholder="Nhập tên nhà thầu camera điện mạng..."
+                    value="{projectInitForm>/ElecNetCamContractor}"
+                />
+
+                <Label
+                    text="Nhà thầu thực hiện nội thất"
+                    required="true"
+                />
+                <Input
+                    id="ipNhaThauNoiThat"
+                    placeholder="Nhập tên nhà thầu nội thất..."
+                    value="{projectInitForm>/InteriorContractor}"
+                />
+            </f:content>
+        </f:SimpleForm>
+    </VBox>
+</core:FragmentDefinition>

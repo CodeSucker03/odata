@@ -22,8 +22,8 @@ server:
             url: https://services.odata.org
           - url: http://dev-s4appdb:8006
             path: /sap
-          - url: http://dev-s4appdb:8006
-            path: /sap/opu/odata/sap/ZLEAVE_REQUEST_SRV/
+          - path: /sap/opu/odata/sap/ZODATA_CONG_TRINH_VPB_SRV/
+            url: http://118.70.33.126:8006
     - name: fiori-tools-appreload
       afterMiddleware: compression
       configuration:
@@ -62,3 +62,7 @@ builder:
         removeConsoleStatements: false
         transformModulesToUI5:
           overridesToOverride: true
+  resources:
+    excludes:
+      - /test/**
+      - /localService/**

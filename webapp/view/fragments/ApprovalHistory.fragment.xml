@@ -1,0 +1,126 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns:table="sap.ui.table"
+    xmlns:columnmenu="sap.m.table.columnmenu"
+    xmlns:u="sap.ui.unified"
+    xmlns:vm="sap.ui.fl.variants"
+    xmlns:sap.ui.fl="sap.ui.fl"
+    xmlns:sap.ui.dt="sap.ui.dt"
+>
+    <Panel>
+        <table:Table
+            id="approvalTable"
+            enableSelectAll="true"
+            selectionMode="None"
+
+            sort="onSort"
+            columnResize="onColumnResize"
+            columnMove="onColumnMove"
+            rows="{approvalHistory>/rows}"
+            rowActionCount="1"
+        >
+            <table:extension>
+                <OverflowToolbar class="sapMTBHeader-CTX">
+                    <Title
+                        text="{i18n>lichSuPheDuyetvaNhanXet}"
+                        class="sapUiTinyMarginBegin"
+                    />
+                    <ToolbarSpacer />
+                </OverflowToolbar>
+            </table:extension>
+            <table:noData>
+                <IllustratedMessage
+                    illustrationType="sapIllus-NoSearchResults"
+                    enableVerticalResponsiveness="true"
+                    enableDefaultTitleAndDescription="false"
+                    title="{i18n>approvalHistoryTitle}"
+                    description="{i18n>approvalHistoryDescription}"
+                />
+            </table:noData>
+            <table:dependents>
+                <columnmenu:Menu>
+                    <columnmenu:items>
+                        <columnmenu:ActionItem
+                            icon="sap-icon://sort"
+                            label="{i18n>sortLabel}"
+                            press="onColumnHeaderItemPress"
+                        />
+                        <columnmenu:ActionItem
+                            icon="sap-icon://table-column"
+                            label="{i18n>columnsLabel}"
+                            press="onColumnHeaderItemPress"
+                        />
+                    </columnmenu:items>
+                </columnmenu:Menu>
+            </table:dependents>
+            <table:columns>
+                <table:Column
+                    sortProperty="MaPR"
+                    headerMenu="menu"
+                    resizable="true"
+                    autoResizable="true"
+                >
+                    <Label
+                        text="{i18n>nguoiPheDuyet}"
+                        tooltip="{i18n>nguoiPheDuyet}"
+                    />
+                    <table:template>
+                        <VBox>
+                            <Text text="{i18n>userName}{approvalHistory>Uname}" />
+                            <Text
+                                text="{i18n>thoiGianDuyet}: {approvalHistory>ChangeDate} - {approvalHistory>ChangeTime}"
+                            />
+                        </VBox>
+                    </table:template>
+                </table:Column>
+
+                <table:Column
+                    sortProperty="VersionNo"
+                    headerMenu="menu"
+                    resizable="true"
+                    autoResizable="true"
+                >
+                    <Label
+                        text="{i18n>version}"
+                        tooltip="{i18n>version}"
+                    />
+                    <table:template>
+                        <Text text="{approvalHistory>VersionNo}" />
+                    </table:template>
+                </table:Column>
+
+                <table:Column
+                    headerMenu="menu"
+                    resizable="true"
+                    autoResizable="true"
+                >
+                    <Label
+                        text="{i18n>nhanXet}"
+                        tooltip="{i18n>nhanXet}"
+                    />
+                    <table:template>
+                        <Text text="{approvalHistory>CommentText}" />
+                    </table:template>
+                </table:Column>
+
+            </table:columns>
+            <!-- <table:rowActionTemplate>
+                <table:RowAction>
+                    <table:RowActionItem
+                        type="Custom"
+                        text="Edit"
+                        icon="sap-icon://edit"
+                        press="onOpenEditRow"
+                    />
+                    <table:RowActionItem
+                        type="Delete"
+                        text="Delete"
+                        press="onDeleteRow"
+                    />
+                </table:RowAction>
+            </table:rowActionTemplate> -->
+        </table:Table>
+    </Panel>
+</core:FragmentDefinition>

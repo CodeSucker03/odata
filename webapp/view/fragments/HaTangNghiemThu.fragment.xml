@@ -1,0 +1,156 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns:core="sap.ui.core"
+    xmlns:f="sap.ui.layout.form"
+    xmlns:uxap="sap.uxap"
+>
+    <VBox
+        width="100%"
+    >
+        <f:SimpleForm
+            editable="true"
+            layout="ResponsiveGridLayout"
+            width="90%"
+            labelSpanXL="3"
+            labelSpanL="4"
+            labelSpanM="4"
+            labelSpanS="12"
+            columnsXL="1"
+            columnsL="1"
+            columnsM="1"
+            singleContainerFullSize="true"
+            class="formFieldGaps"
+        >
+            <f:content>
+                <Label
+                    text="CB phụ trách Thiết kế Điện mạng"
+                    required="true"
+                />
+                <Select
+                    selectedKey="{assignData>/dienMang/selectedKey}"
+                    items="{staffPool>/xdcb}"
+                >
+                    <core:Item
+                        key="{staffPool>id}"
+                        text="{staffPool>name} (Đang xử lý: {staffPool>currentLoads} dự án)"
+                    />
+                </Select>
+                <HBox
+                    visible="{= ${assignData>/dienMang/selectedKey} === 'KHAC' }"
+                    class="sapUiTinyMarginTop"
+                >
+                    <Input
+                        placeholder="Mã nhân viên"
+                        value="{assignData>/dienMang/manualId}"
+                    />
+                    <Input
+                        placeholder="Họ và tên"
+                        value="{assignData>/dienMang/manualName}"
+                    />
+                    <Input
+                        placeholder="Email"
+                        value="{assignData>/dienMang/manualEmail}"
+                        type="Email"
+                    />
+                </HBox>
+
+                <Label
+                    text="CB phụ trách Dự toán"
+                    required="true"
+                />
+                <Select
+                    selectedKey="{assignData>/duToan/selectedKey}"
+                    items="{staffPool>/xdcb}"
+                >
+                    <core:Item
+                        key="{staffPool>id}"
+                        text="{staffPool>name} (Đang xử lý: {staffPool>currentLoads} dự án)"
+                    />
+                </Select>
+                <HBox
+                    visible="{= ${assignData>/duToan/selectedKey} === 'KHAC' }"
+                    class="sapUiTinyMarginTop"
+                >
+                    <Input
+                        placeholder="Mã nhân viên"
+                        value="{assignData>/duToan/manualId}"
+                    />
+                    <Input
+                        placeholder="Họ và tên"
+                        value="{assignData>/duToan/manualName}"
+                    />
+                    <Input
+                        placeholder="Email"
+                        value="{assignData>/duToan/manualEmail}"
+                        type="Email"
+                    />
+                </HBox>
+
+                <Label
+                    text="CB phụ trách Quyết toán"
+                    required="true"
+                />
+                <Select
+                    selectedKey="{assignData>/quyetToan/selectedKey}"
+                    items="{staffPool>/xdcb}"
+                >
+                    <core:Item
+                        key="{staffPool>id}"
+                        text="{staffPool>name} (Đang xử lý: {staffPool>currentLoads} dự án)"
+                    />
+                </Select>
+                <HBox
+                    visible="{= ${assignData>/quyetToan/selectedKey} === 'KHAC' }"
+                    class="sapUiTinyMarginTop"
+                >
+                    <Input
+                        placeholder="Mã nhân viên"
+                        value="{assignData>/quyetToan/manualId}"
+                    />
+                    <Input
+                        placeholder="Họ và tên"
+                        value="{assignData>/quyetToan/manualName}"
+                    />
+                    <Input
+                        placeholder="Email"
+                        value="{assignData>/quyetToan/manualEmail}"
+                        type="Email"
+                    />
+                </HBox>
+
+                <Label
+                    text="CB phụ trách NHNN"
+                    required="true"
+                />
+                <Select
+                    selectedKey="{assignData>/nhnn/selectedKey}"
+                    items="{staffPool>/qlcl}"
+                >
+                    <core:Item
+                        key="{staffPool>id}"
+                        text="{staffPool>name} (Đang xử lý: {staffPool>currentLoads} dự án)"
+                    />
+                </Select>
+                <HBox
+                    visible="{= ${assignData>/nhnn/selectedKey} === 'KHAC' }"
+                    class="sapUiTinyMarginTop"
+                >
+                    <Input
+                        placeholder="Mã nhân viên"
+                        value="{assignData>/nhnn/manualId}"
+                    />
+                    <Input
+                        placeholder="Họ và tên"
+                        value="{assignData>/nhnn/manualName}"
+                    />
+                    <Input
+                        placeholder="Email"
+                        value="{assignData>/nhnn/manualEmail}"
+                        type="Email"
+                    />
+                </HBox>
+            </f:content>
+        </f:SimpleForm>
+    </VBox>
+</core:FragmentDefinition>

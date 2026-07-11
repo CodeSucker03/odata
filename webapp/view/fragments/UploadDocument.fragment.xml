@@ -1,0 +1,48 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns:form="sap.ui.layout.form"
+    xmlns:u="sap.m.upload"
+>
+    <Panel>
+        <VBox>
+            <Title text="To trinh" />
+            <VBox>
+                <u:UploadSet
+                    id="UploadSetA"
+                    mode="None"
+                    items="{GoiMS>/DAUBAI_LIST}"
+                    beforeItemRemoved="onBeforeItemRemoved"
+                    beforeItemAdded="onBeforeItemAdded"
+                    uploadEnabled="true"
+                    uploadButtonInvisible="{path:'trangThaiPheDuyet>/levels/0/Action'}"
+                >
+                    <u:items>
+                        <u:UploadSetItem
+                            url="{GoiMS>Url}"
+                            fileName="{GoiMS>FileName}"
+                            mediaType="{GoiMS>Mimetype}"
+                            openPressed="onOpenPressed"
+                            visibleEdit="false"
+                            visibleRemove="{trangThaiPheDuyet>/levels/0/Action}"
+                        >
+                            <u:attributes>
+                                <ObjectAttribute
+                                    title="Người tạo"
+                                    text="{GoiMS>CreateBy}"
+                                    active="false"
+                                />
+                                <ObjectAttribute
+                                    title="Ngày tạo"
+                                    text="{GoiMS>CreateDate} {GoiMS>CreateTime}"
+                                    active="false"
+                                />
+                            </u:attributes>
+                        </u:UploadSetItem>
+                    </u:items>
+                </u:UploadSet>
+            </VBox>
+        </VBox>
+    </Panel>
+</core:FragmentDefinition>

@@ -1,0 +1,321 @@
+<core:FragmentDefinition
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:f="sap.ui.layout.form"
+    xmlns:core="sap.ui.core"
+    xmlns:u="sap.ui.unified"
+>
+    <f:SimpleForm
+        id="formVendorInfo"
+        editable="true"
+        layout="ResponsiveGridLayout"
+        labelSpanXL="3"
+        labelSpanL="4"
+        labelSpanM="4"
+        labelSpanS="12"
+        columnsXL="1"
+        columnsL="1"
+        columnsM="1"
+        width="90%"
+        singleContainerFullSize="true"
+        class="sapUiSmallMargin"
+    >
+        <f:content>
+            <Label
+                text="Loại công trình"
+                required="true"
+            />
+            <Select
+                id="selLoaiCongTrinh"
+                selectedKey="{projectInitForm>/ProjType}"
+                editable="true"
+            >
+                <items>
+                    <core:Item
+                        key=""
+                        text="-- Chọn loại công trình --"
+                    />
+                    <core:Item
+                        key="DI_DOI"
+                        text="Đi dời"
+                    />
+                    <core:Item
+                        key="MO_MOI"
+                        text="Mở mới"
+                    />
+                    <core:Item
+                        key="THUE_THEM"
+                        text="Thuê thêm diện tích"
+                    />
+                    <core:Item
+                        key="CAI_TAO"
+                        text="Cải tạo sửa chữa"
+                    />
+                    <core:Item
+                        key="KHAC"
+                        text="Khác"
+                    />
+                </items>
+            </Select>
+            <Input
+                placeholder="Nhập loại công trình khác..."
+                value="{projectInitForm>/loaiCongTrinhKhac}"
+                visible="{= ${projectInitForm>/ProjType} === 'KHAC' }"
+                required="{= ${projectInitForm>/ProjType} === 'KHAC' }"
+            />
+
+            <Label
+                text="Tên Ngân hàng, hệ sinh thái"
+                required="true"
+            />
+            <Select
+                id="selNganHang"
+                selectedKey="{projectInitForm>/BankName}"
+            >
+                <items>
+                    <core:Item
+                        key=""
+                        text="-- Chọn ngân hàng --"
+                    />
+                    <core:Item
+                        key="VPBANK"
+                        text="VPBank"
+                    />
+                    <core:Item
+                        key="GPBANK"
+                        text="GPBank"
+                    />
+                    <core:Item
+                        key="KHAC"
+                        text="Khác"
+                    />
+                </items>
+            </Select>
+            <Input
+                placeholder="Nhập tên ngân hàng khác..."
+                value="{projectInitForm>/tenNganHangKhac}"
+                visible="{= ${projectInitForm>/BankName} === 'KHAC' }"
+                required="{= ${projectInitForm>/BankName} === 'KHAC' }"
+            />
+
+            <Label
+                text="Miền"
+                required="true"
+            />
+            <Select
+                id="selMien"
+                selectedKey="{projectInitForm>/Region}"
+            >
+                <items>
+                    <core:Item
+                        key=""
+                        text="-- Chọn Miền --"
+                    />
+                    <core:Item
+                        key="1"
+                        text="Miền Bắc"
+                    />
+                    <core:Item
+                        key="2"
+                        text="Miền Nam"
+                    />
+                    <core:Item
+                        key="KHAC"
+                        text="Khác"
+                    />
+                </items>
+            </Select>
+
+            <Label
+                text="Loại hình đơn vị"
+                required="true"
+            />
+            <Select
+                id="selLoaiHinhDonVi"
+                selectedKey="{projectInitForm>/UnitType}"
+            >
+                <items>
+                    <core:Item
+                        key=""
+                        text="-- Chọn loại hình đơn vị --"
+                    />
+                    <core:Item
+                        key="CN"
+                        text="CN"
+                    />
+                    <core:Item
+                        key="PGD"
+                        text="PGD"
+                    />
+                    <core:Item
+                        key="HO"
+                        text="HO"
+                    />
+                    <core:Item
+                        key="KHAC"
+                        text="Khác"
+                    />
+                </items>
+            </Select>
+            <Input
+                placeholder="Nhập loại hình đơn vị khác..."
+                value="{projectInitForm>/loaiHinhDonViKhac}"
+                visible="{= ${projectInitForm>/UnitType} === 'KHAC' }"
+                required="{= ${projectInitForm>/UnitType} === 'KHAC' }"
+            />
+
+            <Label
+                text="Mã book CN/PGD (VNxxxxxxxx)"
+                required="true"
+            />
+            <Input
+                id="inMaBook"
+                value="{projectInitForm>/BookId}"
+                placeholder="Nhập theo định dạng VNxxxxxxxx"
+                liveChange="onValidateMaBook"
+            />
+
+            <Label
+                text="Mã CN/PGD (3 chữ)"
+                required="true"
+            />
+            <Input
+                id="inMaBranch"
+                value="{projectInitForm>/BranchId}"
+                placeholder="Ví dụ: 001"
+                maxLength="3"
+                liveChange="onBranchCodeChange"
+            />
+
+            <Label
+                text="Tên CN/PGD/Phòng/ban/Trung tâm"
+                required="true"
+            />
+            <Input
+                value="{projectInitForm>/BranchName}"
+                placeholder="Nhập thông tin tự do..."
+            />
+
+            <Label
+                text="Vùng KHCN"
+                required="true"
+            />
+            <Select
+                id="selVungKHCN"
+                selectedKey="{projectInitForm>/Area}"
+            >
+                <items>
+                    <core:Item
+                        key=""
+                        text="-- Chọn Vùng KHCN --"
+                    />
+                    <core:Item
+                        key="1"
+                        text="Vùng 1"
+                    />
+                    <core:Item
+                        key="1B"
+                        text="Vùng 1B"
+                    />
+                    <core:Item
+                        key="2"
+                        text="Vùng 2"
+                    />
+                    <core:Item
+                        key="3"
+                        text="Vùng 3"
+                    />
+                    <core:Item
+                        key="4"
+                        text="Vùng 4"
+                    />
+                    <core:Item
+                        key="5"
+                        text="Vùng 5"
+                    />
+                    <core:Item
+                        key="6"
+                        text="Vùng 6"
+                    />
+                    <core:Item
+                        key="6B"
+                        text="Vùng 6B"
+                    />
+                    <core:Item
+                        key="7"
+                        text="Vùng 7"
+                    />
+                    <core:Item
+                        key="8"
+                        text="Vùng 8"
+                    />
+                    <core:Item
+                        key="8B"
+                        text="Vùng 8B"
+                    />
+                    <core:Item
+                        key="9"
+                        text="Vùng 9"
+                    />
+                    <core:Item
+                        key="10"
+                        text="Vùng 10"
+                    />
+                    <core:Item
+                        key="11"
+                        text="Vùng 11"
+                    />
+                    <core:Item
+                        key="KHAC"
+                        text="Khác"
+                    />
+                </items>
+            </Select>
+
+            <Label
+                text="Ngân sách thực hiện"
+                required="true"
+            />
+            <Input
+                value="{projectInitForm>/Budget}"
+                type="Number"
+                placeholder="Nhập số tiền ngân sách..."
+            />
+
+            <Label
+                text="Thời gian triển khai dự kiến"
+                required="true"
+            />
+            <DatePicker
+                value="{projectInitForm>/PlanStart}"
+                valueFormat="yyyy-MM-dd"
+                displayFormat="dd/MM/yyyy"
+                placeholder="Chọn ngày/tháng/năm"
+            />
+
+            <Label
+                text="Trạng thái kế hoạch"
+                required="true"
+            />
+            <Select
+                id="selKeHoach"
+                selectedKey="{projectInitForm>/PlanType}"
+            >
+                <items>
+                    <core:Item
+                        key=""
+                        text="-- Chọn trạng thái kế hoạch --"
+                    />
+                    <core:Item
+                        key="1"
+                        text="Trong kế hoạch"
+                    />
+                    <core:Item
+                        key="2"
+                        text="Ngoài kế hoạch"
+                    />
+                </items>
+            </Select>
+        </f:content>
+    </f:SimpleForm>
+</core:FragmentDefinition>

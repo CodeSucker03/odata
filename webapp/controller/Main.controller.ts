@@ -1,126 +1,181 @@
-import type { FilterPayload } from "base/types/filter";
-import type { ODataError, ODataResponse } from "base/types/odata";
-import type { FieldValueHelpItem, LeaveRequestForm, LeaveRequestItem } from "base/types/pages/main";
-import { noop, sleep } from "base/utils/shared";
-import type { Button$PressEvent } from "sap/m/Button";
-import type ComboBox from "sap/m/ComboBox";
-import type DatePicker from "sap/m/DatePicker";
-import type Dialog from "sap/m/Dialog";
-import type { Dialog$AfterCloseEvent } from "sap/m/Dialog";
-import type Input from "sap/m/Input";
-import type Label from "sap/m/Label";
-import MessageBox from "sap/m/MessageBox";
-import MessageToast from "sap/m/MessageToast";
-import type MultiComboBox from "sap/m/MultiComboBox";
-import type MultiInput from "sap/m/MultiInput";
-import type { RadioButtonGroup$SelectEvent } from "sap/m/RadioButtonGroup";
-import type Select from "sap/m/Select";
-import type TextArea from "sap/m/TextArea";
-import type TimePicker from "sap/m/TimePicker";
-import Token from "sap/m/Token";
-import type FilterBar from "sap/ui/comp/filterbar/FilterBar";
-import type { FilterBar$FilterChangeEvent } from "sap/ui/comp/filterbar/FilterBar";
-import type FilterGroupItem from "sap/ui/comp/filterbar/FilterGroupItem";
-import PersonalizableInfo from "sap/ui/comp/smartvariants/PersonalizableInfo";
-import type SmartVariantManagement from "sap/ui/comp/smartvariants/SmartVariantManagement";
-import { ValueState } from "sap/ui/core/library";
-import type { Route$MatchedEvent } from "sap/ui/core/routing/Route";
-import type Router from "sap/ui/core/routing/Router";
-import type Context from "sap/ui/model/Context";
-import Filter from "sap/ui/model/Filter";
-import JSONModel from "sap/ui/model/json/JSONModel";
-import type ODataModel from "sap/ui/model/odata/v2/ODataModel";
-import type Table from "sap/ui/table/Table";
+import type View from "sap/ui/core/mvc/View";
 import Base from "./Base.controller";
-import Spreadsheet from "sap/ui/export/Spreadsheet";
-import { EdmType } from "sap/ui/export/library";
-import type { Column } from "base/utils/DataTypes";
-import InputBase from "sap/m/InputBase";
-import type Event from "sap/ui/base/Event";
-import Messaging from "sap/ui/core/Messaging";
-import MessagePopover from "sap/m/MessagePopover";
-import Message from "sap/ui/core/message/Message";
-import ElementRegistry from "sap/ui/core/ElementRegistry";
-import MessageItem from "sap/m/MessageItem";
-import { ButtonType } from "sap/m/library";
-import MessageType from "sap/ui/core/message/MessageType";
-import type Control from "sap/ui/core/Control";
-import type FormElement from "sap/ui/layout/form/FormElement";
-import Button from "sap/m/Button";
+import type TreeTable from "sap/ui/table/TreeTable";
+import type Label from "sap/m/Label";
+import type SmartVariantManagement from "sap/ui/comp/smartvariants/SmartVariantManagement";
+import type Engine from "sap/m/p13n/Engine";
+import type Router from "sap/ui/core/routing/Router";
+import Dialog from "sap/m/Dialog";
+import type FilterBar from "sap/ui/comp/filterbar/FilterBar";
+import type DynamicPage from "sap/f/DynamicPage";
+import JSONModel from "sap/ui/model/json/JSONModel";
+import { noop } from "base/utils/shared";
+import PersonalizableInfo from "sap/ui/comp/smartvariants/PersonalizableInfo";
+import Filter from "sap/ui/model/Filter";
+import type MultiInput from "sap/m/MultiInput";
+import Token from "sap/m/Token";
+import type { FilterPayload } from "base/types/filter";
+import type FilterGroupItem from "sap/ui/comp/filterbar/FilterGroupItem";
+import type Input from "sap/m/Input";
+import TextArea from "sap/m/TextArea";
+import type DatePicker from "sap/m/DatePicker";
+import type TimePicker from "sap/m/TimePicker";
+import type MultiComboBox from "sap/m/MultiComboBox";
+import type Select from "sap/m/Select";
+import type ComboBox from "sap/m/ComboBox";
 import type CheckBox from "sap/m/CheckBox";
 import type Switch from "sap/m/Switch";
-import DateTime from "base/utils/DateTime";
+import type {
+  FilterBar$FilterChangeEvent,
+  FilterBar$FilterChangeEventParameters,
+} from "sap/ui/comp/filterbar/FilterBar";
+import FilterOperator from "sap/ui/model/FilterOperator";
+import { ValueState } from "sap/ui/core/library";
+import MessageBox from "sap/m/MessageBox";
+import type Table from "sap/m/Table";
+import Button, { type Button$PressEvent } from "sap/m/Button";
+import type { InputBase$ChangeEvent } from "sap/m/InputBase";
+import type { Link$PressEvent } from "sap/m/Link";
+import type ListBinding from "sap/ui/model/ListBinding";
+import type { SearchField$LiveChangeEvent } from "sap/m/SearchField";
+import VBox from "sap/m/VBox";
+import Sorter from "sap/ui/model/Sorter";
+import Text from "sap/m/Text";
+import type { Route$MatchedEvent } from "sap/ui/core/routing/Route";
+import ODataModel from "sap/ui/model/odata/v2/ODataModel";
+import type { ODataErrorResponse, ODataResponses } from "base/types/odata";
 
 /**
  * @namespace base.controller
  */
 export default class Main extends Base {
   private router: Router;
+  private view: View;
   private table: Table;
+  private layout: DynamicPage;
 
-  // Filters
-  private svm: SmartVariantManagement;
+  //filter
   private expandedLabel: Label;
   private snappedLabel: Label;
+  private svm: SmartVariantManagement;
   private filterBar: FilterBar;
 
-  // Fragments
-  private createRequestDialog: Dialog;
-  private editRequestDialog: Dialog;
-  private currentActivePopoverBtn: Button;
+  private engine: Engine;
+  private sort: boolean = true;
 
-  // MessagePopover Manager
-  private MessageManager: Messaging;
-  private MessagePopover: MessagePopover;
+  //Dialog
+  private selectedTabIndex = 0;
 
-  public override onInit(): void {
+  public override onInit() {
+    this.view = <View>this.getView();
     this.router = this.getRouter();
-    this.table = this.getControlById<Table>("table");
+    this.table = this.getControlById<Table>("tableProject");
+    this.layout = this.getControlById<DynamicPage>("dynamicPage");
+    this.sort = true;
 
     this.setModel(
       new JSONModel({
-        rows: [],
-        selectedIndices: [],
+        selectedIndex: [],
       }),
-      "table"
+      "PRItems"
     );
 
-    this.setModel(
-      new JSONModel({
-        Status: [],
-        LeaveType: [],
-        TimeSlot: [],
-      }),
-      "master"
-    );
+    this.setModel(new JSONModel({ rows: [] }), "tableProject");
 
-    // Filters
+    //filter
     this.svm = this.getControlById<SmartVariantManagement>("svm");
     this.expandedLabel = this.getControlById<Label>("expandedLabel");
     this.snappedLabel = this.getControlById<Label>("snappedLabel");
-    this.filterBar = this.getControlById<FilterBar>("filterBar");
+    this.filterBar = this.getControlById("filterBar");
 
-    // Filter initialize
+    //filter initialize
     this.filterBar.registerFetchData(this.fetchData);
     this.filterBar.registerApplyData(this.applyData);
     this.filterBar.registerGetFiltersWithValues(this.getFiltersWithValues);
 
+    this.filterBar.addEventDelegate({
+      onkeydown: (event: { key: unknown }) => {
+        if (event.key === "Enter") {
+          this.onSearch();
+        }
+      },
+    });
+
+    // this.setModel(new JSONModel({ rows: [], sortCheck: true }), "tableProject");
+    this.setModel(new JSONModel({ value: "" }), "lyDoHuy");
+
     this.svm.addPersonalizableControl(
       new PersonalizableInfo({
         type: "filterBar",
-        keyName: "table",
+        keyName: "tableProject",
         dataSource: "",
         control: this.filterBar,
       })
     );
     this.svm.initialise(noop, this.filterBar);
 
-    // MessagePopover Manager
-    this.MessageManager = Messaging;
-    this.setModel(this.MessageManager.getMessageModel(), "message");
-
     // Router
     this.router.getRoute("RouteMain")?.attachMatched(this.onObjectMatched);
+  }
+
+  public getProjectList(filters: Filter[]) {
+    const tableModel = this.getModel("tableProject");
+
+    const path: string = "/ProjectSet";
+    const oDataModel = this.getModel<ODataModel>("");
+
+    oDataModel.setUseBatch(false);
+    oDataModel.read(path, {
+      filters: filters,
+      success: (response: any) => {
+        tableModel.setProperty("/rows", response.results);
+      },
+      error: (error: Error) => {
+        console.log(error);
+      },
+    });
+  }
+
+  // #region Master data
+  private async onGetMasterData() {
+    // return new Promise((resolve, reject) => {
+    //   const oDataModel = this.getModel<ODataModel>();
+    //   const masterModel = this.getModel("master");
+    //   oDataModel.read("/FieldValueHelpSet", {
+    //     success: (response: ODataResponses<FieldValueHelpItem[]>) => {
+    //       console.log("Raw FieldValueHelpSet data:", response.results);
+    //       const status: FieldValueHelpItem[] = [];
+    //       const leaveType: FieldValueHelpItem[] = [];
+    //       const timeSlot: FieldValueHelpItem[] = [];
+    //       response.results.forEach((item) => {
+    //         switch (item.FieldName) {
+    //           case "Status": {
+    //             status.push(item);
+    //             break;
+    //           }
+    //           case "LeaveType": {
+    //             leaveType.push(item);
+    //             break;
+    //           }
+    //           case "TimeSlot": {
+    //             timeSlot.push(item);
+    //             break;
+    //           }
+    //           default:
+    //             break;
+    //         }
+    //       });
+    //       masterModel.setProperty("/Status", status);
+    //       masterModel.setProperty("/LeaveType", leaveType);
+    //       masterModel.setProperty("/TimeSlot", timeSlot);
+    //       console.log("Master data loaded:", masterModel.getData());
+    //       resolve(true);
+    //     },
+    //     error: (error: ODataError) => {
+    //       reject(error);
+    //     },
+    //   });
+    // });
   }
 
   // #region Lifecycle hook
@@ -380,7 +435,7 @@ export default class Main extends Base {
 
           case this.isControl<Switch>(control, "sap.m.Switch"): {
             const value = control.getState().toString();
-            
+
             if (value) {
               acc.push(item);
             }
@@ -469,23 +524,24 @@ export default class Main extends Base {
 
   public onSearch() {
     const oDataModel = this.getModel<ODataModel>();
-    const tableModel = this.getModel<JSONModel>("table");
+    const tableModel = this.getModel<JSONModel>("tableProject");
 
     const filters = this.getFilters();
 
     this.table.setBusy(true);
 
-    oDataModel.read("/LeaveRequestSet", {
+    oDataModel.setUseBatch(false);
+    oDataModel.read("/ProjectSet", {
       filters,
       urlParameters: {},
-      success: (response: ODataResponse<LeaveRequestItem[]>) => {
+      success: (response: ODataResponses<any>) => {
         this.table.setBusy(false);
 
         console.log("OData read success:", response.results);
 
         tableModel.setProperty("/rows", response.results);
       },
-      error: (error: ODataError) => {
+      error: (error: ODataErrorResponse) => {
         this.table.setBusy(false);
         console.error("OData read error:", error);
       },
@@ -494,936 +550,40 @@ export default class Main extends Base {
     this.table.setShowOverlay(false);
   }
 
+  public navDetail(event: Link$PressEvent) {
+    const link = event.getSource();
+    const text = link.getText();
+    this.router.navTo("RouteProject", { branchId: text });
+  }
+
+  public navRowDetail(event: any) {
+    const item = event.getParameter("listItem").getBindingContext("tableProject").getObject();
+
+    this.router.navTo("RouteProject", { branchId: item.branchId });
+  }
+
+  public onAddProject(event: Button$PressEvent) {
+    this.router.navTo("RouteProjectCreate");
+  }
+
   private onRefresh() {
     this.filterBar.fireSearch();
   }
 
-  public onSearchLegacy() {
-    const tableModel = this.getModel<JSONModel>("table");
-
-    this.table.setBusy(true);
-
-    sleep(2000)
-      .then(() => {
-        const mockData: LeaveRequestItem[] = [
-          {
-            CreatedAt: new Date(),
-            Reason: "Vacation",
-            RequestId: "REQ-001",
-            CreatedBy: "John Doe",
-            EmployeeId: "EMP-001",
-            LeaveType: "Annual Leave",
-            StartDate: "2024-07-01",
-            EndDate: "2024-07-10",
-            Status: "Approved",
-            TimeSlot: "Full Day",
-          },
-          {
-            CreatedAt: new Date(),
-            Reason: "Medical Leave",
-            RequestId: "REQ-002",
-            CreatedBy: "Jane Smith",
-            EmployeeId: "EMP-002",
-            LeaveType: "Sick Leave",
-            StartDate: "2024-08-15",
-            EndDate: "2024-08-20",
-            Status: "Pending",
-            TimeSlot: "Half Day",
-          },
-        ];
-
-        this.table.setBusy(false);
-        tableModel.setProperty("/rows", mockData);
-
-        console.log("Data fetch successful:", mockData);
-      })
-      .catch((error) => {
-        this.table.setBusy(false);
-        console.error("Error during data fetch:", error);
-      });
-  }
-
-  // #region Table
-  public onRowSelectionChange() {
-    const selectedIndices = this.table.getSelectedIndices();
-
-    const tableModel = this.getModel<JSONModel>("table");
-
-    tableModel.setProperty("/selectedIndices", [...selectedIndices]);
-  }
-  // #endregion Table
-
-  // #region Event handlers
-  // #region Create
-  public async onOpenCreateRequest() {
-    try {
-      if (!this.createRequestDialog) {
-        this.createRequestDialog = await this.loadView<Dialog>("CreateRequest");
-
-        // Register Message Manager once
-        this.createMessagePopover();
-        this.MessageManager.registerObject(this.createRequestDialog, true);
-
-        this.createRequestDialog.addDependent(this.MessagePopover);
-      }
-      // Get PopoverBtn
-      this.currentActivePopoverBtn = this.getControlById("messagePopoverBtnCreate");
-
-      // Clear old messages
-      this.MessageManager.removeAllMessages();
-
-      this.createRequestDialog.setModel(
-        new JSONModel({
-          LeaveType: "",
-          StartDate: "",
-          EndDate: "",
-          Reason: "",
-          TimeSlot: "",
-          TimeSlotIndex: 0,
-        } satisfies LeaveRequestForm),
-        "form"
-      );
-
-      this.createRequestDialog.open();
-    } catch (error) {
-      console.log(error);
-    }
-  }
-
-  public onCloseCreateRequest() {
-    this.createRequestDialog?.close();
-  }
-
-  public onAfterCloseCreateRequest(event: Dialog$AfterCloseEvent) {
-    const dialog = event.getSource();
-
-    this.clearErrorMessages(dialog);
-
-    dialog.setModel(null, "form");
-  }
-
-  public onSubmitCreateRequest(event: Button$PressEvent) {
-    const control = event.getSource();
-    const dialog = <Dialog>control.getParent();
-
-    const formModel = <JSONModel>dialog.getModel("form");
-    const formData = <LeaveRequestForm>formModel.getData();
-    const { LeaveType, StartDate, EndDate, Reason, TimeSlot } = formData;
-
-    const oDataModel = this.getModel<ODataModel>();
-
-    // Change Popover Button State
-    this.changePopoverButtonState(this.currentActivePopoverBtn?.getId() || "");
-
-    // Validate with passed dialog
-    const isValid = this.onValidateBeforeSubmit(this.createRequestDialog);
-    if (!isValid) {
-      setTimeout(() => {
-        this.MessagePopover.openBy(this.currentActivePopoverBtn);
-      }, 0);
-      return;
-    }
-
-    dialog.setBusy(true);
-
-    oDataModel.create(
-      "/LeaveRequestSet",
-      {
-        LeaveType,
-        StartDate: this.formatter.toUTCDate(StartDate),
-        EndDate: this.formatter.toUTCDate(EndDate),
-        Reason,
-        TimeSlot: "01",
-        Status: "01", // New
-      },
-      {
-        success: (response: ODataResponse<LeaveRequestItem>) => {
-          dialog.setBusy(false);
-
-          MessageToast.show("Leave request created successfully.");
-
-          this.onCloseCreateRequest();
-
-          this.onRefresh();
-        },
-        error: (error: ODataError) => {
-          dialog.setBusy(false);
-        },
-      }
-    );
-  }
-  // #endregion Create
-
-  // #region Edit
-
-  public async onOpenEditRequest() {
-    try {
-      if (!this.editRequestDialog) {
-        this.editRequestDialog = await this.loadView<Dialog>("EditRequest");
-
-        // Register Message Manager once
-        this.createMessagePopover();
-        this.MessageManager.registerObject(this.editRequestDialog, true);
-
-        this.editRequestDialog.addDependent(this.MessagePopover);
-      }
-
-      // Get PopoverBtn
-      this.currentActivePopoverBtn = this.getControlById("messagePopoverBtnEdit");
-
-      // Clear old messages
-      this.MessageManager.removeAllMessages();
-
-      // Get selected index from table
-      const indices = this.table.getSelectedIndices();
-      const SelectedItem = <LeaveRequestForm>this.table.getContextByIndex(indices[0])?.getObject();
-
-      const form = {
-        ...SelectedItem,
-        StartDate: this.formatter.formatDate(SelectedItem.StartDate, "dd.MM.yyyy", "yyyyMMdd"),
-        EndDate: this.formatter.formatDate(SelectedItem.EndDate, "dd.MM.yyyy", "yyyyMMdd"),
-        TimeSlotIndex: this.timeSlotToIndex(SelectedItem.TimeSlot),
-      };
-
-      this.editRequestDialog.setModel(new JSONModel(form), "form");
-
-      this.editRequestDialog.open();
-    } catch (error) {
-      console.log(error);
-    }
-  }
-
-  public onAfterCloseEditRequest(event: Dialog$AfterCloseEvent) {
-    const dialog = event.getSource();
-
-    this.clearErrorMessages(dialog);
-
-    dialog.setModel(null, "form");
-  }
-
-  public onCloseEditRequest() {
-    this.editRequestDialog?.close();
-  }
-
-  public onSubmitEditRequest(event: Button$PressEvent) {
-    const control = event.getSource();
-    const dialog = <Dialog>control.getParent();
-
-    const formModel = <JSONModel>dialog.getModel("form");
-    const formData = <LeaveRequestForm>formModel.getData();
-    const { LeaveType, StartDate, EndDate, Reason, TimeSlot } = formData;
-
-    // Get selected index from table
-    const indices = this.table.getSelectedIndices();
-    const item = <LeaveRequestItem>this.table?.getContextByIndex(indices[0])?.getObject();
-
-    // Create key to edit
-    const oDataModel = this.getModel<ODataModel>();
-    const key = oDataModel.createKey("/LeaveRequestSet", item);
-
-    // Change Popover Button State
-    this.changePopoverButtonState(this.currentActivePopoverBtn?.getId() || "");
-
-    // Validate with passed dialog
-    const isValid = this.onValidateBeforeSubmit(this.editRequestDialog);
-
-    if (!isValid) {
-      setTimeout(() => {
-        this.MessagePopover.openBy(this.currentActivePopoverBtn);
-      }, 0);
-      return;
-    }
-
-    dialog.setBusy(true);
-
-    oDataModel.update(
-      key,
-      {
-        LeaveType,
-        StartDate: this.formatter.toUTCDate(StartDate, "dd.MM.yyyy"),
-        EndDate: this.formatter.toUTCDate(EndDate, "dd.MM.yyyy"),
-        Reason,
-        TimeSlot,
-      },
-      {
-        success: (response: ODataResponse<LeaveRequestItem>) => {
-          dialog.setBusy(false);
-          console.log(response);
-
-          MessageToast.show("Leave request updated successfully.");
-
-          this.onCloseEditRequest();
-
-          this.onRefresh();
-        },
-        error: (error: ODataError) => {
-          console.log(error);
-
-          dialog.setBusy(false);
-        },
-      }
-    );
-  }
-
-  // #endregion Edit
-
-  // #region Delete
-  public onDeleteRequest() {
-    const oDataModel = this.getModel<ODataModel>();
-
-    const indices = this.table.getSelectedIndices();
-
-    if (!indices.length) {
-      MessageToast.show("Please select at least one request to delete.");
-      return;
-    }
-
-    const item = <LeaveRequestItem>this.table.getContextByIndex(indices[0])?.getObject();
-
-    MessageBox.confirm("Do you want to delete this request?", {
-      actions: [MessageBox.Action.DELETE, MessageBox.Action.CANCEL],
-      emphasizedAction: MessageBox.Action.DELETE,
-      onClose: (action: unknown) => {
-        if (action === MessageBox.Action.DELETE) {
-          const key = oDataModel.createKey("/LeaveRequestSet", item);
-
-          oDataModel.remove(key, {
-            success: () => {
-              MessageToast.show("Leave request deleted successfully.");
-
-              this.onRefresh();
-            },
-            error: (error: ODataError) => {
-              console.log(error);
-              MessageBox.error("Failed to delete the leave request.");
-            },
-          });
-        }
-      },
-    });
-  }
-  // #endregion Delete
-  // #endregion Event handlers
-
-  // #region Validation
-
-  // On change Input Value
-  public onChangeValue(event: Event) {
-    try {
-      const control = event.getSource<InputBase>();
-
-      if (control.getVisible()) {
-        this.validateControl(control);
-      }
-      this.changePopoverButtonState(this.currentActivePopoverBtn?.getId() || "");
-    } catch (error) {
-      console.log(error);
-    }
-  }
-
-  // Function to reset validate state when change dialog
-  private clearErrorMessages(container: Dialog) {
-    const controls = this.getFormControlsByFieldGroup<InputBase>({
-      groupId: "FormField",
-      container: container,
-    });
-    controls.forEach((control) => {
-      this.setMessageState(control, {
-        message: "",
-        severity: "None",
-      });
-    });
-  }
-
-  private onValidateBeforeSubmit(container: Dialog) {
-    const controls = this.getFormControlsByFieldGroup<InputBase>({
-      groupId: "FormField",
-      container: container,
-    });
-
-    const isValid = this.validateControls(controls);
-
-    if (isValid) {
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  private validateControls(controls: InputBase[]) {
-    let isValid = false;
-    let isError = false;
-
-    controls.forEach((control) => {
-      isError = this.validateControl(control);
-
-      isValid = isValid || isError;
-    });
-
-    return !isValid;
-  }
-
-  private validateControl(control: InputBase): boolean {
-    let isError = false;
-
-    this.setMessageState(control, {
-      message: "",
-      severity: "None",
-    });
-
-    let requiredError = false;
-    let outOfRangeError = false;
-    let dateRangeError = false;
-    let pastDateError = false;
-
-    let value: string = "";
-
-    switch (true) {
-      case this.isControl<Input>(control, "sap.m.Input"): {
-        value = control.getValue().trim();
-
-        if (!value && control.getRequired()) {
-          requiredError = true;
-        }
-
-        break;
-      }
-
-      case this.isControl<TextArea>(control, "sap.m.TextArea"): {
-        value = control.getValue().trim();
-
-        if (!value && control.getRequired()) {
-          requiredError = true;
-        }
-
-        break;
-      }
-
-      case this.isControl<DatePicker>(control, "sap.m.DatePicker"): {
-        value = control.getValue();
-        const valueAsDate = control.getDateValue();
-
-        if (!value && control.getRequired()) {
-          requiredError = true;
-        } else if (value && !control.isValidValue()) {
-          outOfRangeError = true;
-        } else if (!DateTime.IsSameOrAfter(valueAsDate, new Date())) {
-          pastDateError = true;
-        } else {
-          // Bổ sung kiểm tra ngày hợp lệ nếu cần
-          dateRangeError = this.checkdateRangeError(control.getFieldGroupIds()[0]);
-        }
-
-        break;
-      }
-
-      case this.isControl<ComboBox>(control, "sap.m.ComboBox"): {
-        value = control.getSelectedKey();
-
-        const input = control.getValue().trim();
-
-        if (!value && input) {
-          outOfRangeError = true;
-        } else if (!value && control.getRequired()) {
-          requiredError = true;
-        }
-
-        break;
-      }
-      default:
-        break;
-    }
-
-    // Set Error and Message
-    if (requiredError) {
-      this.setMessageState(control, {
-        message: "Required",
-        severity: "Error",
-      });
-
-      isError = true;
-    } else if (outOfRangeError) {
-      this.setMessageState(control, {
-        message: "Invalid value",
-        severity: "Error",
-      });
-
-      isError = true;
-    } else if (pastDateError) {
-      this.setMessageState(control, {
-        message: "Date cannot be in the past",
-        severity: "Error",
-      });
-
-      isError = true;
-    } else if (dateRangeError) {
-      this.setMessageState(control, {
-        message: "Start date must be before end date",
-        severity: "Error",
-      });
-
-      isError = true;
-    }
-
-    return isError;
-  }
-
-  private setMessageState(
-    control: InputBase,
-    options: {
-      message: string;
-      severity: keyof typeof ValueState;
-    }
-  ) {
-    const { message, severity } = options;
-
-    // Add message to Message Manager Popover
-    this.addMessageToManager(control, message, severity);
-
-    // Set text and state directly on control ui
-    control.setValueState(severity);
-    control.setValueStateText?.(message);
-  }
-
-  // Function to compare two dates given a FieldGroupid and return true false
-  private checkdateRangeError(GroupId: string): boolean {
-    let dateRangeError = false;
-
-    const controls = this.getFormControlsByFieldGroup<InputBase>({
-      groupId: GroupId,
-    });
-
-    const startControl = <DatePicker>(
-      controls.find(
-        (control) =>
-          this.isControl<DatePicker>(control, "sap.m.DatePicker") &&
-          control.getBinding("value")?.getPath() === "StartDate"
-      )
-    );
-    const endControl = <DatePicker>(
-      controls.find(
-        (control) =>
-          this.isControl<DatePicker>(control, "sap.m.DatePicker") &&
-          control.getBinding("value")?.getPath() === "EndDate"
-      )
-    );
-
-    const datePickers = [startControl, endControl];
-
-    const startDate = startControl?.getDateValue();
-    const endDate = endControl?.getDateValue();
-
-    if (!DateTime.IsSameOrAfter(endDate, startDate)) {
-      dateRangeError = true;
-
-      // Set controls state to error
-      datePickers.forEach((control) => {
-        this.setMessageState(control, {
-          message: "Start date must be before end date",
-          severity: "Error",
-        });
-      });
-    } else {
-      // clear controls state if valid
-      datePickers.forEach((control) => {
-        // Only clear if the error is date range error avoid clear other errors
-        if (
-          control.getValueState() === "Error" &&
-          control.getValueStateText() === "Start date must be before end date"
-        ) {
-          this.setMessageState(control, {
-            message: "",
-            severity: "None",
-          });
-        }
-      });
-    }
-
-    return dateRangeError;
-  }
-
-  public onRadioSelectionChange(event: RadioButtonGroup$SelectEvent): void {
-    const control = event.getSource();
-
-    const context = <Context>control.getBindingContext("form");
-    const formModel = <JSONModel>context.getModel();
-    const path = context.getPath();
-
-    const selectedIndex = control.getSelectedIndex();
-
-    const options = <FieldValueHelpItem[]>this.getModel("master").getProperty("/TimeSlot");
-
-    const { FieldKey } = options[selectedIndex];
-
-    formModel.setProperty(`${path}/TimeSlot`, FieldKey);
-  }
-  // #endregion Validation
-
-  // #region Message Popover
-
-  public handleMessagePopoverPress(event: Button$PressEvent): void {
-    if (!this.MessagePopover) {
-      this.createMessagePopover();
-    }
-
-    this.MessagePopover.toggle(event.getSource());
-  }
-
-  // Add Message to Message Manager
-  private addMessageToManager(control: InputBase, message: string, severity: keyof typeof ValueState) {
-    const BindingContextInfoTarget = this.getBindingContextInfo(control);
-
-    // clear old message
-    this.removeMessageFromTarget(BindingContextInfoTarget.target);
-
-    // Add message to Message Manager Popover IF severity !== "None" to avoid adding emty message
-    if (severity !== "None") {
-      this.MessageManager.addMessages(
-        new Message({
-          message: message,
-          type: severity,
-          additionalText: BindingContextInfoTarget.label,
-          target: BindingContextInfoTarget.target,
-          processor: BindingContextInfoTarget.processor,
-        })
-      );
-    }
-  }
-
-  // Get Label in A Form layout Given a InputBase Control
-  private getLabelText(control: InputBase): string {
-    if (!control) return "";
-    const SimpleForm = control.getParent() as FormElement;
-
-    const Label = (<Label>SimpleForm.getLabel()).getText();
-    return Label;
-  }
-
-  // Get Control Binding Path
-  private getTargetPath(control: Control, modelName: string): string {
-    const context = control.getBindingContext(modelName);
-    if (!context) return "";
-
-    let basePath = context.getPath(); // maybe "/", or "/form", or "/items/0"
-    let propertyPath: string | undefined;
-
-    // Determine binding property
-    if (
-      this.isControl<Input>(control, "sap.m.Input") ||
-      this.isControl<TextArea>(control, "sap.m.TextArea") ||
-      this.isControl<DatePicker>(control, "sap.m.DatePicker")
-    ) {
-      propertyPath = control.getBindingPath("value");
-    } else if (this.isControl<ComboBox>(control, "sap.m.ComboBox")) {
-      propertyPath = control.getBindingPath("selectedKey");
-    } else {
-      propertyPath = control.getBindingPath("value");
-    }
-
-    if (!propertyPath) return "";
-
-    // --- FIX: remove trailing "/" on basePath to avoid double slash ---
-    if (basePath === "/") {
-      // root level → target is "/Property"
-      return `/${propertyPath}`;
-    }
-
-    // normal case → "/form/StartDate"
-    return `${basePath}/${propertyPath}`;
-  }
-
-  // #region Create MessagePopover
-  private createMessagePopover(): void {
-    this.MessagePopover = new MessagePopover({
-      activeTitlePress: (Event) => {
-        const item = Event.getParameter("item");
-        if (!item) return;
-
-        const msg = <Message>item.getBindingContext("message")?.getObject();
-        console.log(msg);
-        if (!msg) return;
-
-        const controlId = msg.getControlId();
-        const control = ElementRegistry.get(controlId);
-
-        if (control && control.isFocusable?.()) {
-          control.focus();
-        }
-      },
-      items: {
-        path: "message>/",
-        template: new MessageItem({
-          title: "{message>message}",
-          subtitle: "{message>additionalText}",
-          groupName: {
-            parts: [{ path: "message>controlIds" }],
-          },
-          activeTitle: {
-            parts: [{ path: "message>controlIds" }],
-            formatter: this.isPositionable.bind(this),
-          },
-          type: "{message>type}",
-          description: "{message>message}",
-        }),
-      },
-
-      groupItems: false,
-    });
-  }
-  // #endregion Create MessagePopover
-
-  private isPositionable(ControlId: string): boolean {
-    // Such a hook can be used by the application to determine if a control can be found/reached on the page and navigated to.
-    return ControlId ? true : true;
-  }
-
-  // Remove message from a control
-  private removeMessageFromTarget(target: string): void {
-    const messageModel = this.MessageManager.getMessageModel();
-    const messages: Message[] = <Message[]>messageModel.getData() || [];
-
-    // Find all messages whose target list contains target
-    const matchedMessages = messages.filter((msg: Message) => {
-      const targets = msg.getTargets?.() || [];
-      return targets.includes(target);
-    });
-
-    // Remove matched Messages
-    if (matchedMessages.length > 0) {
-      this.MessageManager.removeMessages(matchedMessages);
-    }
-  }
-
-  // Display the button type according to the message with the highest severity | Error > Warning > Success > Info
-  private buttonTypeFormatter(): ButtonType {
-    let HighestSeverity: ButtonType = ButtonType.Neutral;
-
-    // Retrieve All Current Message
-    let Messages = <Message[]>this.MessageManager.getMessageModel().getData();
-
-    Messages.forEach((Message: Message) => {
-      switch (Message.getType()) {
-        case "Error":
-          HighestSeverity = ButtonType.Negative;
-          break;
-        case "Warning":
-          HighestSeverity = HighestSeverity !== ButtonType.Negative ? ButtonType.Critical : HighestSeverity;
-          break;
-        case "Success":
-          HighestSeverity =
-            HighestSeverity !== ButtonType.Negative && HighestSeverity !== ButtonType.Critical
-              ? ButtonType.Success
-              : HighestSeverity;
-          break;
-        default:
-          HighestSeverity = !HighestSeverity ? ButtonType.Neutral : HighestSeverity;
-          break;
-      }
-    });
-
-    return HighestSeverity;
-  }
-
-  // Display the number of messages with the highest severity
-  private highestSeverityMessages(): string {
-    let HighestSeverityIconType: ButtonType = this.buttonTypeFormatter();
-
-    let HighestSeverityMessageType: MessageType = MessageType.None;
-
-    switch (HighestSeverityIconType) {
-      case ButtonType.Negative:
-        HighestSeverityMessageType = MessageType.Error;
-        break;
-
-      case ButtonType.Critical:
-        HighestSeverityMessageType = MessageType.Warning;
-        break;
-
-      case ButtonType.Success:
-        HighestSeverityMessageType = MessageType.Success;
-        break;
-
-      default:
-        HighestSeverityMessageType = HighestSeverityMessageType ?? MessageType.None;
-        break;
-    }
-
-    // Retrieve All Current Message
-    const messages = <Message[]>this.MessageManager.getMessageModel().getData() || [];
-
-    console.log(messages);
-
-    // Get the Highest number of Error in an Error Type
-    const count = messages.reduce((total: number, msg: Message) => {
-      return msg.getType() === HighestSeverityMessageType ? total + 1 : total;
-    }, 0);
-
-    return count.toString() || "";
-  }
-
-  // Set the button icon according to the message with the highest severity
-  private buttonIconFormatter(): string {
-    let sIcon: string = "";
-
-    // Retrieve All Current Message
-    let Messages: Message[] = <Message[]>this.MessageManager.getMessageModel().getData() || [];
-
-    Messages.forEach((Message) => {
-      switch (Message.getType()) {
-        case "Error":
-          sIcon = "sap-icon://error";
-          break;
-        case "Warning":
-          sIcon = sIcon !== "sap-icon://error" ? "sap-icon://alert" : sIcon;
-          break;
-        case "Success":
-          sIcon = sIcon !== "sap-icon://error" && sIcon !== "sap-icon://alert" ? "sap-icon://sys-enter-2" : sIcon;
-          break;
-        default:
-          sIcon = !sIcon ? "sap-icon://sys-enter-2" : sIcon;
-          break;
-      }
-    });
-
-    return sIcon;
-  }
-
-  // #region Attach Listener for Change in Message
-  private changePopoverButtonState(buttonId: string) {
-    const PopoverBtn = this.getControlById<Button>(buttonId);
-
-    this.MessagePopover.getBinding("items")?.attachChange(() => {
-      this.MessagePopover?.navigateBack();
-      PopoverBtn.setType(this.buttonTypeFormatter());
-      PopoverBtn.setIcon(this.buttonIconFormatter());
-      PopoverBtn.setText(this.highestSeverityMessages());
-    });
-
-    // #endregion Attach Listener for Change in Message
-  }
-
-  // #endregion Message Popover
-
   // #region Formatters
-  public formatStatusText(statusKey: string): string {
+  public getStatusText(statusKey: string): string {
     const map: Record<string, string> = {
-      "01": "New",
-      "02": "Approved",
-      "03": "Rejected",
+      "1": "Cho Duyet",
+      "2": "Da Duyet",
     };
     return map[statusKey] ?? statusKey;
   }
 
-  public formatStatusState(statusKey: string): ValueState {
-    const map: Record<string, ValueState> = {
-      "01": ValueState.Information,
-      "02": ValueState.Success,
-      "03": ValueState.Error,
+  public getState(statusKey: string): string {
+    const map: Record<string, string> = {
+      "1": "Warning",
+      "2": "Success",
     };
-    return map[statusKey] ?? ValueState.None;
+    return map[statusKey] ?? statusKey;
   }
-  // #endregion Formatters
-
-  // #region Master data
-  private async onGetMasterData() {
-    return new Promise((resolve, reject) => {
-      const oDataModel = this.getModel<ODataModel>();
-      const masterModel = this.getModel("master");
-
-      oDataModel.read("/FieldValueHelpSet", {
-        success: (response: ODataResponse<FieldValueHelpItem[]>) => {
-          console.log("Raw FieldValueHelpSet data:", response.results);
-
-          const status: FieldValueHelpItem[] = [];
-          const leaveType: FieldValueHelpItem[] = [];
-          const timeSlot: FieldValueHelpItem[] = [];
-
-          response.results.forEach((item) => {
-            switch (item.FieldName) {
-              case "Status": {
-                status.push(item);
-                break;
-              }
-              case "LeaveType": {
-                leaveType.push(item);
-                break;
-              }
-              case "TimeSlot": {
-                timeSlot.push(item);
-                break;
-              }
-              default:
-                break;
-            }
-          });
-
-          masterModel.setProperty("/Status", status);
-          masterModel.setProperty("/LeaveType", leaveType);
-          masterModel.setProperty("/TimeSlot", timeSlot);
-
-          console.log("Master data loaded:", masterModel.getData());
-
-          resolve(true);
-        },
-        error: (error: ODataError) => {
-          reject(error);
-        },
-      });
-    });
-  }
-  // #endregion Master data
-
-  // #region Convert string to int for timeslot
-  public timeSlotToIndex(sValue: string): number {
-    if (!sValue) {
-      return 0;
-    }
-    return parseInt(sValue, 10) - 1;
-  }
-
-  public indexToTimeSlot(iIndex: number): string {
-    return (iIndex + 1).toString().padStart(2, "0");
-  }
-  // #endregion Convert
-
-  // #region Excel export
-  public onExportExcel(): void {
-    const Cols: Column[] = [
-      { label: "Mã đơn nghỉ", property: "RequestId", type: EdmType.String },
-      { label: "Loại phép", property: "LeaveType", type: EdmType.String },
-      {
-        label: "Ngày bắt đầu",
-        property: "StartDate",
-        type: EdmType.Date,
-        format: "dd.MM.yyyy",
-      },
-      {
-        label: "Ngày kết thúc",
-        property: "EndDate",
-        type: EdmType.Date,
-        format: "dd.MM.yyyy",
-      },
-      { label: "TimeSlot", property: "TimeSlot", type: EdmType.String },
-      { label: "Lý do xin nghỉ", property: "Reason", type: EdmType.String },
-      { label: "Trạng thái", property: "Status", type: EdmType.String },
-    ];
-
-    const settings = {
-      workbook: { columns: Cols },
-      dataSource: this.getModel<JSONModel>("table").getProperty("/rows"),
-      fileName: "LeaveRequests.xlsx",
-      Worker: false,
-    };
-
-    const spreadsheet = new Spreadsheet(settings);
-    spreadsheet
-      .build()
-      .then(() => {
-        console.log("Spreadsheet export successful");
-      })
-      .catch((err) => {
-        console.error("Spreadsheet export error:", err);
-      });
-  }
-  // #endregion Excel
 }

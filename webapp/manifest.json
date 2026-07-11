@@ -17,7 +17,7 @@
     },
     "dataSources": {
       "mainService": {
-        "uri": "/sap/opu/odata/sap/ZLEAVE_REQUEST_SRV/",
+        "uri": "/sap/opu/odata/sap/ZODATA_CONG_TRINH_VPB_SRV/",
         "type": "OData",
         "settings": {
           "annotations": [],
@@ -42,7 +42,7 @@
       "tablet": true,
       "phone": true
     },
-    "fullWidth": false
+    "fullWidth": true
   },
   "sap.ui5": {
     "flexEnabled": false,
@@ -50,7 +50,8 @@
       "minUI5Version": "1.120.14",
       "libs": {
         "sap.m": {},
-        "sap.ui.core": {}
+        "sap.ui.core": {},
+        "sap.uxap": {}
       }
     },
     "contentDensities": {
@@ -104,12 +105,48 @@
           "target": [
             "TargetMain"
           ]
+        },
+        {
+          "name": "RouteProject",
+          "pattern": "detail/{branchId}",
+          "target": "TargetProject"
+        },
+        {
+          "name": "RouteEditInit",
+          "pattern": "detail/{branchId}/{workItemId}",
+          "target": "TargetProject"
+        },
+
+        {
+          "name": "RouteApproval",
+          "pattern": "approve/{branchId}/{workItemId}",
+          "target": "TargetProject"
+        },
+
+        {
+          "name": "RouteProjectCreate",
+          "pattern": "create",
+          "target": "TargetProject"
+        },
+        {
+          "name": "RouteContractor",
+          "pattern": "contractor/{branchId}/{workItemId}",
+          "target": "TargetProject"
+        },
+        {
+          "name": "RouteRoleAssignment",
+          "pattern": "role-assignment/{branchId}/{workItemId}",
+          "target": "TargetProject"
         }
       ],
       "targets": {
         "TargetMain": {
           "id": "Main",
           "name": "Main"
+        },
+        "TargetProject": {
+          "id": "Project",
+          "name": "Project"
         },
         "notFound": {
           "viewId": "notFound",

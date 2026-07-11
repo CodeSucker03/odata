@@ -1,0 +1,259 @@
+<mvc:View
+    controllerName="base.controller.Project"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:f="sap.ui.layout.form"
+    xmlns:core="sap.ui.core"
+    xmlns:u="sap.ui.unified"
+    xmlns:uxap="sap.uxap"
+    xmlns:app="http://schemas.sap.com/sapui5/extension/sap.ui.core.CustomData/1"
+    height="100%"
+>
+    <uxap:ObjectPageLayout
+        id="objectPageLayout"
+        showFooter="true"
+    >
+        <uxap:headerTitle>
+            <uxap:ObjectPageHeader
+                id="pageHeader"
+                objectTitle="Khởi tạo Hồ sơ Dự án"
+            />
+        </uxap:headerTitle>
+
+        <uxap:sections>
+            <uxap:ObjectPageSection title="Công cụ hỗ trợ nhập liệu nhanh">
+                <uxap:subSections>
+                    <uxap:ObjectPageSubSection>
+                        <uxap:blocks>
+                            <Panel
+                                headerText="Công cụ hỗ trợ nhập liệu nhanh"
+                                class="sapUiSmallMargin"
+                            >
+                                <HBox
+                                    wrap="Wrap"
+                                    alignItems="Center"
+                                >
+                                    <VBox class="sapUiMediumMarginEnd">
+                                        <Label
+                                            text="Tải lên văn bản (Scan, Ảnh,...) để OCR tự động điền:"
+                                        />
+                                        <u:FileUploader
+                                            id="ocrUploader"
+                                            name="ocrFile"
+                                            uploadUrl="api/ocr"
+                                            fileType="png,jpg,jpeg,pdf"
+                                            change="onSimpleProxyOCRUpload"
+                                            placeholder="Chọn file ảnh/scan..."
+                                            buttonText="Tải lên &amp; OCR"
+                                        />
+                                    </VBox>
+                                    <VBox>
+                                        <Label
+                                            text="Tải lên file dữ liệu cấu trúc (Excel, Word):"
+                                        />
+                                        <u:FileUploader
+                                            id="fileImportUploader"
+                                            name="importFile"
+                                            fileType="xlsx,xls,docx,doc"
+                                            change="onFileImportParse"
+                                            placeholder="Chọn file Excel/Word..."
+                                            buttonText="Đọc dữ liệu file"
+                                        />
+                                    </VBox>
+                                </HBox>
+                            </Panel>
+                        </uxap:blocks>
+                    </uxap:ObjectPageSubSection>
+                </uxap:subSections>
+            </uxap:ObjectPageSection>
+
+            <uxap:ObjectPageSection title="Thông tin dự án">
+                <uxap:subSections>
+                    <uxap:ObjectPageSubSection>
+                        <uxap:blocks>
+                            <core:Fragment
+                                fragmentName="base.view.fragments.ProjectForm"
+                                type="XML"
+                            />
+                        </uxap:blocks>
+                    </uxap:ObjectPageSubSection>
+                </uxap:subSections>
+            </uxap:ObjectPageSection>
+
+            <uxap:ObjectPageSection title="Tờ trình chủ trương ">
+                <uxap:subSections>
+                    <uxap:ObjectPageSubSection>
+                        <uxap:blocks>
+                            <core:Fragment
+                                fragmentName="base.view.fragments.UploadDocument"
+                                type="XML"
+                            />
+                        </uxap:blocks>
+                    </uxap:ObjectPageSubSection>
+                </uxap:subSections>
+            </uxap:ObjectPageSection>
+
+            <uxap:ObjectPageSection
+                id="Assignment"
+                title="Assignment"
+            >
+                <uxap:subSections>
+                    <uxap:ObjectPageSubSection
+                        id="subSecThietKe"
+                        title="Cán bộ chuyên môn Kiến trúc &amp; Khảo sát"
+                    >
+                        <uxap:blocks>
+                            <core:Fragment
+                                fragmentName="base.view.fragments.ThietKeGiamSat"
+                                type="XML"
+                            />
+                        </uxap:blocks>
+                    </uxap:ObjectPageSubSection>
+
+                    <uxap:ObjectPageSubSection
+                        id="subSecKyThuat"
+                        title="Cán bộ chuyên môn Cơ điện &amp; Pháp lý"
+                    >
+                        <uxap:blocks>
+                            <core:Fragment
+                                fragmentName="base.view.fragments.HaTangNghiemThu"
+                                type="XML"
+                            />
+                        </uxap:blocks>
+                    </uxap:ObjectPageSubSection>
+                </uxap:subSections>
+            </uxap:ObjectPageSection>
+
+            <uxap:ObjectPageSection title="Thông tin Nhà thầu thực hiện">
+                <uxap:subSections>
+                    <uxap:ObjectPageSubSection>
+                        <uxap:blocks>
+                            <core:Fragment
+                                fragmentName="base.view.fragments.ContractorList"
+                                type="XML"
+                            />
+                        </uxap:blocks>
+                    </uxap:ObjectPageSubSection>
+                </uxap:subSections>
+            </uxap:ObjectPageSection>
+
+            <uxap:ObjectPageSection title="Ý kiến xử lý &amp; Bình luận">
+                <uxap:subSections>
+                    <uxap:ObjectPageSubSection>
+                        <uxap:blocks>
+                            <VBox
+                                width="100%"
+                                class="sapUiMediumMarginBottom"
+                            >
+                                <Panel
+                                    headerText="Ý kiến xử lý &amp; Bình luận (Comments)"
+                                    expandable="true"
+                                    expanded="true"
+                                >
+                                    <content>
+                                        <TextArea
+                                            id="taComment"
+                                            value="{formData>/commentText}"
+                                            placeholder="Nhập ý kiến đóng góp hoặc lý do từ chối/phê duyệt tại đây..."
+                                            width="100%"
+                                            rows="4"
+                                            growing="true"
+                                            growingMaxLines="6"
+                                            class="sapUiSmallMarginBottom"
+                                        />
+
+                                        <List
+                                            id="commentsHistoryList"
+                                            items="{workflowData>/history}"
+                                            headerText="Lịch sử ý kiến"
+                                        >
+                                            <FeedListItem
+                                                sender="{workflowData>approverName}"
+                                                text="{workflowData>comment}"
+                                                timestamp="{workflowData>timestamp}"
+                                                info="{workflowData>action}"
+                                            />
+                                        </List>
+                                    </content>
+                                </Panel>
+                            </VBox>
+                        </uxap:blocks>
+                    </uxap:ObjectPageSubSection>
+                </uxap:subSections>
+            </uxap:ObjectPageSection>
+
+            <uxap:ObjectPageSection title="Lịch sử phê duyệt">
+                <uxap:subSections>
+                    <uxap:ObjectPageSubSection>
+                        <uxap:blocks>
+                            <core:Fragment
+                                fragmentName="base.view.fragments.ApprovalHistory"
+                                type="XML"
+                            />
+                        </uxap:blocks>
+                    </uxap:ObjectPageSubSection>
+                </uxap:subSections>
+            </uxap:ObjectPageSection>
+        </uxap:sections>
+
+        <uxap:footer>
+            <OverflowToolbar>
+                <ToolbarSpacer />
+                <Button
+                    type="Accept"
+                    text="Gửi dự án"
+                    icon="sap-icon://accept"
+                    visible="{= ${ProjectModel>/isCreateStage}}"
+                    enabled="{= ${ProjectModel>/status} === '0' }"
+                    press="onSubmitProject"
+                />
+
+                  <Button
+                    type="Accept"
+                    text="Hoàn thiện phân quyền"
+                    icon="sap-icon://accept"
+                    visible="{= ${ProjectModel>/isRoleAssignStage}}"
+                    enabled="{= ${ProjectModel>/status} === '2' }"
+                    press="onActionAssignSubmit"
+                />
+                <Button
+                    type="Accept"
+                    text="Hoàn thiện nhà thầu"
+                    icon="sap-icon://accept"
+                    visible="{= ${ProjectModel>/isContractorStage}}"
+                    enabled="{= ${ProjectModel>/status} === '3' }"
+                    press="onActionSendContractor"
+                />
+                <Button
+                    type="Accept"
+                    text="Phê duyệt dự án"
+                    icon="sap-icon://accept"
+                    app:buttonData="Y"
+                    visible="{= ${ProjectModel>/isApproveStage}}"
+                    enabled="{= ${ProjectModel>/status} === '4' }"
+                    press="onPressAction"
+                />
+                <Button
+                    type="Reject"
+                    text="Từ chối dự án"
+                    app:buttonData="N"
+                    icon="sap-icon://decline"
+                    visible="{= ${ProjectModel>/isApproveStage} }"
+                    enabled="{= ${ProjectModel>/enableButton}}"
+                    press="onPressAction"
+                />
+                <Button
+                    type="Attention"
+                    text="Yêu cầu sửa dự án"
+                    app:buttonData="B"
+                    icon="sap-icon://edit"
+                    visible="{= ${ProjectModel>/isApproveStage} }"
+                    enabled="{= ${ProjectModel>/enableButton}}"
+                    press="onPressAction="
+                />
+              
+                
+            </OverflowToolbar>
+        </uxap:footer>
+    </uxap:ObjectPageLayout>
+</mvc:View>

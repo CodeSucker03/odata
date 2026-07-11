@@ -1,14 +1,20 @@
 <mvc:View
-    xmlns:table="sap.ui.table"
-    xmlns:core="sap.ui.core"
-    xmlns:f="sap.f"
     controllerName="base.controller.Main"
     xmlns:mvc="sap.ui.core.mvc"
     xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:core="sap.ui.core"
+    xmlns:u="sap.ui.unified"
+    xmlns:uxap="sap.uxap"
     xmlns:svm="sap.ui.comp.smartvariants"
     xmlns:fb="sap.ui.comp.filterbar"
+    height="100%"
 >
-    <f:DynamicPage headerExpanded="true">
+    <f:DynamicPage
+        id="page"
+        preserveHeaderStateOnScroll="true"
+        fitContent="true"
+    >
         <f:title>
             <f:DynamicPageTitle>
                 <f:heading>
@@ -36,78 +42,66 @@
                 <f:content>
                     <fb:FilterBar
                         id="filterBar"
-                        persistencyKey="myPersKey"
+                        persistencyKey="prTable"
                         useToolbar="false"
                         search="onSearch"
-                        filterChange="onFilterChange"
+                        filterChange=".onFilterChange"
                         afterVariantLoad="onAfterVariantLoad"
                     >
                         <fb:filterGroupItems>
                             <fb:FilterGroupItem
-                                name="LeaveType"
-                                label="Loại phép"
+                                name="FormDate"
+                                label="Từ ngày"
                                 groupName="Group1"
                                 visibleInFilterBar="true"
                             >
                                 <fb:control>
-                                    <ComboBox
-                                        name="LeaveType"
-                                        selectionChange="onSelectionChange"
-                                        items="{
-                                            path: 'master>/LeaveType'
-                                        }"
-                                    >
-                                        <items>
-                                            <core:Item
-                                                key="{master>FieldKey}"
-                                                text="{master>FieldValue}"
-                                            />
-                                        </items>
-                                    </ComboBox>
+                                    <DatePicker
+                                        id="FormDate"
+                                        name="FormDate"
+                                        valueFormat="yyyyMMdd"
+                                        displayFormat="dd/MM/yyyy"
+                                        change=".onFieldChange"
+                                        placeholder="Chọn ngày bắt đầu"
+                                    />
                                 </fb:control>
                             </fb:FilterGroupItem>
 
                             <fb:FilterGroupItem
-                                name="Status"
+                                name="TrangThai"
                                 label="Trạng thái"
-                                groupName="Group2"
+                                groupName="Group1"
                                 visibleInFilterBar="true"
                             >
                                 <fb:control>
-                                    <ComboBox
-                                        name="Status"
-                                        selectionChange="onSelectionChange"
-                                        items="{path: 'master>/Status'}"
+                                    <MultiComboBox
+                                        id="GMSStatus"
+                                        items="{searchHelp>/Status}"
+                                        selectionChange="onFieldChange"
+                                        placeholder="Chọn trang thái"
                                     >
-                                        <items>
-                                            <core:Item
-                                                key="{master>FieldKey}"
-                                                text="{master>FieldValue}"
-                                            />
-                                        </items>
-                                    </ComboBox>
+                                        <core:Item
+                                            key="{searchHelp>key}"
+                                            text="{searchHelp>text}"
+                                        />
+                                    </MultiComboBox>
                                 </fb:control>
                             </fb:FilterGroupItem>
-
                             <fb:FilterGroupItem
-                                name="TimeSlot"
-                                label="TimeSlot"
-                                groupName="Group3"
+                                name="Code"
+                                label="Mã"
+                                groupName="Group1"
                                 visibleInFilterBar="true"
                             >
                                 <fb:control>
-                                    <ComboBox
-                                        name="TimeSlot"
-                                        selectionChange="onSelectionChange"
-                                        items="{path: 'master>/TimeSlot'}"
-                                    >
-                                        <items>
-                                            <core:Item
-                                                key="{master>FieldKey}"
-                                                text="{master>FieldValue}"
-                                            />
-                                        </items>
-                                    </ComboBox>
+                                    <MultiInput
+                                        id="Code"
+                                        name="Code"
+                                        showSuggestion="false"
+                                        showValueHelp="false"
+                                        change=".onFieldChange"
+                                        placeholder="Tìm kiếm mã"
+                                    />
                                 </fb:control>
                             </fb:FilterGroupItem>
                         </fb:filterGroupItems>
@@ -116,148 +110,151 @@
             </f:DynamicPageHeader>
         </f:header>
         <f:content>
-            <table:Table
-                id="table"
-                rows="{table>/rows}"
-                selectionMode="MultiToggle"
-                rowSelectionChange="onRowSelectionChange"
-                rowActionCount="1"
+            <Table
+                id="tableProject"
+                items="{tableProject>/rows}"
+                mode="SingleSelectLeft"
+                selectionChange="onSelectRow"
+                sticky="HeaderToolbar"
             >
-                <table:extension>
-                    <OverflowToolbar class="sapMTBHeader-CTX">
-                        <Title text="Leave Request" />
+                <headerToolbar>
+                    <OverflowToolbar>
+                        <Label
+                            text="Danh sách công trình"
+                            design="Bold"
+                        />
                         <ToolbarSpacer />
+                        <SearchField
+                            placeholder="Tìm kiếm tên chi nhánh"
+                            width="300px"
+                            liveChange="onSearchTenGMS"
+                        />
                         <Button
-                            id="btnAdd"
                             text="Add"
-                            tooltip="Add"
-                            type="Emphasized"
-                            icon="sap-icon://add"
-                            press=".onOpenCreateRequest"
+                            press=".onAddProject"
                         />
-                        <Button
-                            id="btnEdit"
-                            text="Edit"
-                            tooltip="Edit"
-                            type="Emphasized"
-                            icon="sap-icon://edit"
-                            enabled="{= ${table>/selectedIndices}.length === 1 }"
-                            press=".onOpenEditRequest"
-                        />
-                        <Button
-                            id="btnDelete"
-                            text="Delete"
-                            tooltip="Delete"
-                            type="Reject"
-                            icon="sap-icon://delete"
-                            enabled="{= ${table>/selectedIndices}.length === 1 }"
-                            press="onDeleteRequest"
-                        />
+
                         <ToolbarSeparator />
-                        <Button
-                            icon="sap-icon://excel-attachment"
-                            tooltip="Export to Excel"
-                            press="onExportExcel"
+                        <OverflowToolbarButton
+                            icon="sap-icon://sort"
+                            press=".sortGMS"
                         />
                     </OverflowToolbar>
-                </table:extension>
-                <table:noData>
-                    <IllustratedMessage
-                        illustrationType="sapIllus-NoSearchResults"
-                        enableVerticalResponsiveness="true"
-                    />
-                </table:noData>
-                <table:columns>
-                    <table:Column
-                        id="RequestId"
-                        sortProperty="RequestId"
-                        filterProperty="RequestId"
-                    >
-                        <table:label>
-                            <Label text="Mã đơn nghỉ" />
-                        </table:label>
-                        <table:template>
-                            <ObjectIdentifier
-                                title="{table>RequestId}"
-                                titleActive="true"
+                </headerToolbar>
+                <noData>
+                    <IllustratedMessage />
+                </noData>
+                <columns>
+                    <Column>
+                        <Text text="Mã CN/PGD" />
+                    </Column>
+                    <Column>
+                        <Text text="Tên CN/PGD" />
+                    </Column>
+                    <Column>
+                        <Text text="Mã book" />
+                    </Column>
+                    <Column>
+                        <Text text="Loại công trình" />
+                    </Column>
+                    <Column>
+                        <Text text="Nhà thầu XD" />
+                    </Column>
+                    <Column>
+                        <Text text="Nhà thầu Điều hòa" />
+                    </Column>
+                    <Column>
+                        <Text text="Nhà thầu Điện-Camera" />
+                    </Column>
+                    <Column>
+                        <Text text="Nhà thầu Nội thất" />
+                    </Column>
+                    <Column>
+                        <Text text="Miền" />
+                    </Column>
+                    <Column>
+                        <Text text="Ngân hàng" />
+                    </Column>
+                    <Column>
+                        <Text text="Ngân sách" />
+                    </Column>
+                    <Column>
+                        <Text text="Loại kế hoạch" />
+                    </Column>
+                    <Column>
+                        <Text text="Trạng thái" />
+                    </Column>
+                    <Column>
+                        <Text text="Ngày tạo" />
+                    </Column>
+                    <Column>
+                        <Text text="Người tạo" />
+                    </Column>
+                </columns>
+
+                <items>
+                    <ColumnListItem>
+                        <cells>
+                            <Link
+                                text="{tableProject>BranchId}"
+                                press="navDetail"
                             />
-                        </table:template>
-                    </table:Column>
-
-                    <table:Column>
-                        <table:label>
-                            <Label text="Loại phép" />
-                        </table:label>
-                        <table:template>
-                            <Text text="{table>LeaveType}" />
-                        </table:template>
-                    </table:Column>
-
-                    <table:Column>
-                        <table:label>
-                            <Label text="Ngày bắt đầu nghỉ" />
-                        </table:label>
-                        <table:template>
+                        </cells>
+                        <cells>
+                            <Text text="{tableProject>BranchName}" />
+                        </cells>
+                        <cells>
+                            <Text text="{tableProject>BookId}" />
+                        </cells>
+                        <cells>
+                            <Text text="{tableProject>ProjType}" />
+                        </cells>
+                        <cells>
                             <Text
-                                text="{
-                                    path: 'table>StartDate',
-                                    formatter: '.formatter.formatDate'
-                                }"
+                                text="{tableProject>ConstructionContractor}"
                             />
-                        </table:template>
-                    </table:Column>
-
-                    <table:Column>
-                        <table:label>
-                            <Label text="Ngày kết thúc nghỉ" />
-                        </table:label>
-                        <table:template>
+                        </cells>
+                        <cells>
                             <Text
-                                text="{
-                                    path: 'table>EndDate',
-                                    formatter: '.formatter.formatDate'
-                                }"
+                                text="{tableProject>AirConditioningContractor}"
                             />
-                        </table:template>
-                    </table:Column>
-
-                    <table:Column>
-                        <table:label>
-                            <Label text="TimeSlot" />
-                        </table:label>
-                        <table:template>
-                            <Text text="{table>TimeSlot}" />
-                        </table:template>
-                    </table:Column>
-
-                    <table:Column>
-                        <table:label>
-                            <Label text="Lý do xin nghỉ" />
-                        </table:label>
-                        <table:template>
-                            <Text text="{table>Reason}" />
-                        </table:template>
-                    </table:Column>
-
-                    <table:Column>
-                        <table:label>
-                            <Label text="Trạng thái" />
-                        </table:label>
-                        <table:template>
+                        </cells>
+                        <cells>
+                            <Text text="{tableProject>ElecNetCamContractor}" />
+                        </cells>
+                        <cells>
+                            <Text text="{tableProject>InteriorContractor}" />
+                        </cells>
+                        <cells>
+                            <Text text="{tableProject>Region}" />
+                        </cells>
+                        <cells>
+                            <Text text="{tableProject>BankName}" />
+                        </cells>
+                        <cells>
+                            <Text text="{tableProject>Budget}" />
+                        </cells>
+                        <cells>
+                            <Text text="{tableProject>PlanType}" />
+                        </cells>
+                        <cells>
                             <ObjectStatus
-                                text="{path: 'table>Status', formatter: '.formatStatusText'}"
-                                state="{path: 'table>Status', formatter: '.formatStatusState'}"
+                                id="objectStatus"
+                                text="{parts:[{path:'tableProject>Status'}], formatter:'.getStatusText'}"
+                                state="{parts:['tableProject>Status'], formatter:'.getState'}"
                                 inverted="true"
+                                class="sapUISmallMarginBottom"
                             />
-                        </table:template>
-                    </table:Column>
-                </table:columns>
-                <table:rowActionTemplate>
-                    <table:RowAction>
-                        <table:RowActionItem type="Navigation" />
-                    </table:RowAction>
-                </table:rowActionTemplate>
-            </table:Table>
+                        </cells>
+                        <cells>
+                            <Text text="{tableProject>CreatedDate}" />
+                        </cells>
+                        <cells>
+                            <Text text="{tableProject>CreatedBy}" />
+                        </cells>
+                    </ColumnListItem>
+                </items>
+            </Table>
         </f:content>
     </f:DynamicPage>
 </mvc:View>
